@@ -1,36 +1,18 @@
 package com.mycompany.impjava;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import javax.swing.*;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-
-public class Dashboard extends JFrame {
+public class Create extends JFrame {
     private JPanel sidebar;
     private JPanel contentArea;
     private boolean isSidebarVisible = true;
 
-    public Dashboard() {
-        setTitle("Dashboard");
+    public Create() {
+        setTitle("Create New Entry");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -41,7 +23,7 @@ public class Dashboard extends JFrame {
 
         // Content Area
         contentArea = new JPanel(new BorderLayout());
-        contentArea.setBackground(Color.WHITE);
+        contentArea.setBackground(Color.GRAY);
 
         // Top Bar with gradient background
         JPanel topBar = new JPanel() {
@@ -58,12 +40,12 @@ public class Dashboard extends JFrame {
         topBar.setLayout(new BorderLayout());
 
         // Welcome Label
-        JLabel welcomeLabel = new JLabel("Welcome to IMP Library", JLabel.CENTER);
+        JLabel welcomeLabel = new JLabel("Create Library Entry", JLabel.CENTER);
         welcomeLabel.setFont(new Font("Verdana", Font.BOLD, 35));
         welcomeLabel.setForeground(Color.WHITE);
         topBar.add(welcomeLabel, BorderLayout.CENTER);
 
-        // Custom Toggle Button
+        // Toggle Sidebar Button
         JButton toggleButton = new JButton("☰") {
             @Override
             protected void paintComponent(Graphics g) {
@@ -88,7 +70,6 @@ public class Dashboard extends JFrame {
         toggleButton.setToolTipText("Toggle Sidebar");
         toggleButton.addActionListener(e -> toggleSidebar());
 
-        // Add toggle button to a padded transparent panel
         JPanel buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.setOpaque(false);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -97,37 +78,89 @@ public class Dashboard extends JFrame {
         topBar.add(buttonPanel, BorderLayout.WEST);
         contentArea.add(topBar, BorderLayout.NORTH);
 
-        // Table Setup
-        String[] columnNames = {"ID", "TITLE", "AUTHOR", "PUBLISHER", "COPYRIGHT", "LCN", "SECTION", "ISACTIVE", "CREATED", "UPDATED"};
-        Object[][] data = {
-            {"1", "Sample Book", "John Doe", "Sample Publisher", "2022", "LCN123", "Section A", "Yes", "2022-01-01", "2022-06-01"},
-            {"2", "Another Book", "Jane Smith", "Another Publisher", "2023", "LCN456", "Section B", "No", "2023-02-01", "2023-07-01"},
-            {"3", "Third Book", "Alice Johnson", "Third Publisher", "2024", "LCN789", "Section C", "Yes", "2024-03-01", "2024-08-01"},
-            {"4", "Temp Book A", "Temp Author A", "Temp Publisher A", "2025", "LCN111", "Section D", "Yes", "2025-01-15", "2025-04-10"},
-            {"5", "Temp Book B", "Temp Author B", "Temp Publisher B", "2025", "LCN222", "Section E", "No", "2025-02-20", "2025-04-11"},
-            {"6", "Temp Book C", "Temp Author C", "Temp Publisher C", "2025", "LCN333", "Section F", "Yes", "2025-03-25", "2025-04-12"}
-        };
+        // Centered Form Panel with wider layout
+        JPanel formPanel = createFormPanel();
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(100, 50, 150), 3),
+                BorderFactory.createEmptyBorder(30, 30, 30, 30)
+        ));
+        formPanel.setMaximumSize(new Dimension(750, Integer.MAX_VALUE));
 
-        JTable table = new JTable(data, columnNames);
-        table.setFillsViewportHeight(true);
-        table.setRowHeight(30);
-        table.setFont(new Font("Arial", Font.PLAIN, 14));
+        JPanel centerWrapper = new JPanel(new GridBagLayout());
+        centerWrapper.setBackground(new Color(245, 245, 245));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.CENTER;
+        centerWrapper.add(formPanel, gbc);
 
-        // Customize the table header to match the theme
-        table.getTableHeader().setBackground(new Color(80, 30, 120));  // Sidebar/top bar color
-        table.getTableHeader().setForeground(Color.WHITE);  // Text color (white for contrast)
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));  // Bold header text
-        table.getTableHeader().setBorder(BorderFactory.createLineBorder(new Color(100, 50, 150), 2));  // Optional border
-
-        // Create a JPanel to center the table with margin
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50)); // Adjust the margin here
-        tablePanel.add(new JScrollPane(table), BorderLayout.CENTER);
-
-        // Add the table panel to the content area
-        contentArea.add(tablePanel, BorderLayout.CENTER);
-
+        contentArea.add(centerWrapper, BorderLayout.CENTER);
         add(contentArea, BorderLayout.CENTER);
+    }
+
+    private JPanel createFormPanel() {
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setBackground(new Color(245, 245, 245));
+
+        Font labelFont = new Font("Arial", Font.BOLD, 16);
+        Font fieldFont = new Font("Arial", Font.PLAIN, 14);
+        Dimension fieldSize = new Dimension(400, 35); // Wider and consistent
+
+        formPanel.add(createLabeledField("Title:", labelFont, fieldFont, fieldSize));
+        formPanel.add(Box.createVerticalStrut(10));
+        formPanel.add(createLabeledField("Author:", labelFont, fieldFont, fieldSize));
+        formPanel.add(Box.createVerticalStrut(10));
+        formPanel.add(createLabeledField("Publisher:", labelFont, fieldFont, fieldSize));
+        formPanel.add(Box.createVerticalStrut(10));
+        formPanel.add(createLabeledField("Copyright:", labelFont, fieldFont, fieldSize));
+        formPanel.add(Box.createVerticalStrut(10));
+        formPanel.add(createLabeledField("LCN:", labelFont, fieldFont, fieldSize));
+        formPanel.add(Box.createVerticalStrut(10));
+        formPanel.add(createLabeledField("Section:", labelFont, fieldFont, fieldSize));
+        formPanel.add(Box.createVerticalStrut(20));
+
+        JButton submitButton = new JButton("Submit");
+        submitButton.setFont(new Font("Arial", Font.BOLD, 16));
+        submitButton.setForeground(Color.WHITE);
+        submitButton.setBackground(new Color(80, 30, 120));
+        submitButton.setPreferredSize(new Dimension(120, 40));
+        submitButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        submitButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Form Submitted!");
+        });
+        submitButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        formPanel.add(submitButton);
+
+        // Add margin to left and right
+        JPanel paddedPanel = new JPanel(new BorderLayout());
+        paddedPanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 10, 40));
+        paddedPanel.setBackground(new Color(245, 245, 245));
+        paddedPanel.add(formPanel, BorderLayout.CENTER);
+
+        return paddedPanel;
+    }
+
+    private JPanel createLabeledField(String labelText, Font labelFont, Font fieldFont, Dimension fieldSize) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(new Color(245, 245, 245));
+
+        JLabel label = new JLabel(labelText);
+        label.setFont(labelFont);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JTextField field = new JTextField();
+        field.setFont(fieldFont);
+        field.setMaximumSize(fieldSize);
+        field.setPreferredSize(fieldSize);
+        field.setMinimumSize(fieldSize);
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+        field.setBorder(BorderFactory.createLineBorder(new Color(100, 50, 150), 2));
+
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(5)); // Small spacing
+        panel.add(field);
+        return panel;
     }
 
     private JPanel createSidebar() {
@@ -144,7 +177,7 @@ public class Dashboard extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setPreferredSize(new Dimension(300, getHeight()));
 
-        // ✅ Add white border to the sidebar
+        // 👉 Add white border here
         panel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
 
         JLabel menuListLabel = new JLabel("Menu List");
@@ -160,7 +193,23 @@ public class Dashboard extends JFrame {
         };
 
         for (String item : menuItems) {
-            panel.add(createSidebarButton(item));
+            JButton btn = createSidebarButton(item);
+
+            if (item.equals("Create")) {
+                btn.setBackground(Color.decode("#270359"));
+                btn.setOpaque(true);
+                btn.setContentAreaFilled(true);
+                btn.setFocusPainted(false);
+                btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+                btn.setForeground(Color.WHITE);
+                btn.setFont(new Font("Arial", Font.PLAIN, 18));
+                for (MouseListener ml : btn.getMouseListeners()) {
+                    btn.removeMouseListener(ml);
+                }
+                btn.addActionListener(e -> JOptionPane.showMessageDialog(this, "Create clicked!"));
+            }
+
+            panel.add(btn);
         }
 
         panel.add(Box.createVerticalGlue());
@@ -203,8 +252,10 @@ public class Dashboard extends JFrame {
 
             @Override
             public void mouseExited(MouseEvent e) {
-                button.setBackground(null);
-                button.setOpaque(false);
+                if (!text.equals("Create")) {
+                    button.setBackground(null);
+                    button.setOpaque(false);
+                }
             }
         });
 
@@ -221,9 +272,9 @@ public class Dashboard extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            Dashboard frame = new Dashboard();
+
+            Create frame = new Create();
             frame.setVisible(true);
-        });
+
     }
 }
