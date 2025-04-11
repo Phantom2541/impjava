@@ -200,7 +200,6 @@ public class Login extends javax.swing.JFrame {
         String url = "jdbc:mysql://localhost:3306/implibrary";
         String dbUser = "root";
         String dbPass = "";
-        String secretKey = "mykey123"; // The secret key used for AES encryption
 
         try {
             // Load the MySQL driver
@@ -209,38 +208,28 @@ public class Login extends javax.swing.JFrame {
             // Connect to the database
             Connection con = DriverManager.getConnection(url, dbUser, dbPass);
 
-            // SQL query to decrypt the password stored in the database
-            String sql = "SELECT AES_DECRYPT(password, ?) AS decryptedPassword FROM users WHERE email = ?";
+            // SQL query to fetch plain text password
+            String sql = "SELECT password FROM users WHERE email = ?";
             PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, secretKey);  // The secret key for AES decryption
-            ps.setString(2, email);      // The email provided by the user
+            ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                // Get the decrypted password
-                String dbPassword = rs.getString("decryptedPassword");
+                String dbPassword = rs.getString("password");
 
-                if (dbPassword == null) {
-                    System.out.println("❌ Decryption returned null.");
-                    JOptionPane.showMessageDialog(this, "Could not decrypt password. Check encryption key or DB format.", "Login Failed", JOptionPane.ERROR_MESSAGE);
-                } else if (password.equals(dbPassword)) {
-                    // Password matches
+                if (password.equals(dbPassword)) {
                     JOptionPane.showMessageDialog(this, "✅ Login Successful! Welcome, " + email);
                     // new Dashboard().setVisible(true);
                     // this.dispose();
                 } else {
-                    // Incorrect password
                     JOptionPane.showMessageDialog(this, "Incorrect password!", "Login Failed", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
-                // Email not found
                 JOptionPane.showMessageDialog(this, "Email not found!", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }
 
-            // Close the database connection
             con.close();
         } catch (Exception e) {
-            // Handle any errors
             JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
