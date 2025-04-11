@@ -1,13 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package com.mycompany.impjava;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import javax.swing.SwingUtilities;
+
 /**
  *
  * @author Smart Care
@@ -15,22 +9,16 @@ import java.sql.Statement;
 public class Impjava {
 
     public static void main(String[] args) {
-        String url = "jdbc:mysql://localhost:3306/implibrary";
-        String user = "root";
-        try{
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection con = DriverManager.getConnection(url, user, "");
-
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM books");
-            while(rs.next()){
-                System.out.println(rs.getInt(1)+"  "+rs.getString(2)+"  "+rs.getString(3)+"  "+rs.getString(4)+"  "+rs.getString(5));
+        // Always recommended to start Swing apps on the Event Dispatch Thread
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                Login login = new Login();
+                login.setVisible(true);
+                login.pack();
+                login.setLocationRelativeTo(null);
+                login.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
             }
-            con.close();
-        }
-        catch(Exception e){
-            System.out.println(e);
-        }
-        // System.out.println("Hello World!");
+        });
     }
 }
