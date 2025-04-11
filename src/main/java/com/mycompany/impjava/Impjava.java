@@ -13,6 +13,7 @@ public class Impjava {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+
                 Login login = new Login();
                 login.setVisible(true);
                 login.pack();
