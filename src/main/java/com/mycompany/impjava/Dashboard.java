@@ -20,9 +20,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 
 public class Dashboard extends JFrame {
     private JPanel sidebar;
@@ -97,36 +94,7 @@ public class Dashboard extends JFrame {
         topBar.add(buttonPanel, BorderLayout.WEST);
         contentArea.add(topBar, BorderLayout.NORTH);
 
-        // Table Setup
-        String[] columnNames = {"ID", "TITLE", "AUTHOR", "PUBLISHER", "COPYRIGHT", "LCN", "SECTION", "ISACTIVE", "CREATED", "UPDATED"};
-        Object[][] data = {
-            {"1", "Sample Book", "John Doe", "Sample Publisher", "2022", "LCN123", "Section A", "Yes", "2022-01-01", "2022-06-01"},
-            {"2", "Another Book", "Jane Smith", "Another Publisher", "2023", "LCN456", "Section B", "No", "2023-02-01", "2023-07-01"},
-            {"3", "Third Book", "Alice Johnson", "Third Publisher", "2024", "LCN789", "Section C", "Yes", "2024-03-01", "2024-08-01"},
-            {"4", "Temp Book A", "Temp Author A", "Temp Publisher A", "2025", "LCN111", "Section D", "Yes", "2025-01-15", "2025-04-10"},
-            {"5", "Temp Book B", "Temp Author B", "Temp Publisher B", "2025", "LCN222", "Section E", "No", "2025-02-20", "2025-04-11"},
-            {"6", "Temp Book C", "Temp Author C", "Temp Publisher C", "2025", "LCN333", "Section F", "Yes", "2025-03-25", "2025-04-12"}
-        };
-
-        JTable table = new JTable(data, columnNames);
-        table.setFillsViewportHeight(true);
-        table.setRowHeight(30);
-        table.setFont(new Font("Arial", Font.PLAIN, 14));
-
-        // Customize the table header to match the theme
-        table.getTableHeader().setBackground(new Color(80, 30, 120));  // Sidebar/top bar color
-        table.getTableHeader().setForeground(Color.WHITE);  // Text color (white for contrast)
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));  // Bold header text
-        table.getTableHeader().setBorder(BorderFactory.createLineBorder(new Color(100, 50, 150), 2));  // Optional border
-
-        // Create a JPanel to center the table with margin
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50)); // Adjust the margin here
-        tablePanel.add(new JScrollPane(table), BorderLayout.CENTER);
-
-        // Add the table panel to the content area
-        contentArea.add(tablePanel, BorderLayout.CENTER);
-
+        // Add the content area to the frame
         add(contentArea, BorderLayout.CENTER);
     }
 
@@ -155,8 +123,7 @@ public class Dashboard extends JFrame {
         panel.add(menuListLabel);
 
         String[] menuItems = {
-                "Create", "Edit", "Option 3", "Option 4", "Option 5",
-                "Option 6", "Option 7", "Option 8", "Option 9"
+                "Home", "Books", "Users"
         };
 
         for (String item : menuItems) {
@@ -172,7 +139,6 @@ public class Dashboard extends JFrame {
 
         return panel;
     }
-
 
     private JButton createSidebarButton(String text) {
         JButton button = new JButton(text) {
@@ -221,9 +187,7 @@ public class Dashboard extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            Dashboard frame = new Dashboard();
-            frame.setVisible(true);
-        });
+        Dashboard frame = new Dashboard();
+        frame.setVisible(true);
     }
 }
