@@ -1,0 +1,69 @@
+package com.mycompany.impjava;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class Dashboard extends JFrame {
+
+    public Dashboard() {
+        // Frame settings
+        setTitle("Dashboard");
+        setSize(800, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center the window
+        setLayout(new BorderLayout());
+
+        // Sidebar panel
+        JPanel sidebar = new JPanel();
+        sidebar.setPreferredSize(new Dimension(200, getHeight()));
+        sidebar.setBackground(new Color(45, 45, 60));
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+
+        // Add some sidebar buttons
+        JButton homeBtn = new JButton("Home");
+        JButton booksBtn = new JButton("Books");
+        JButton usersBtn = new JButton("Users");
+        JButton logoutBtn = new JButton("Logout");
+
+        // Customize buttons (optional)
+        JButton[] buttons = { homeBtn, booksBtn, usersBtn, logoutBtn };
+        for (JButton btn : buttons) {
+            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setMaximumSize(new Dimension(180, 40));
+            btn.setFocusPainted(false);
+            sidebar.add(Box.createVerticalStrut(15));
+            sidebar.add(btn);
+        }
+
+        // Add action listener for logout
+        logoutBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int confirm = JOptionPane.showConfirmDialog(Dashboard.this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    dispose(); // Close the dashboard
+                    // You can redirect to login page here
+                }
+            }
+        });
+
+        // Main content area
+        JPanel mainPanel = new JPanel();
+        mainPanel.setBackground(Color.WHITE);
+        JLabel welcomeLabel = new JLabel("Welcome to the Dashboard!");
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        mainPanel.add(welcomeLabel);
+
+        // Add components to the frame
+        add(sidebar, BorderLayout.WEST);
+        add(mainPanel, BorderLayout.CENTER);
+    }
+
+    // Main method to run it standalone
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new Dashboard().setVisible(true);
+        });
+    }
+}
+
