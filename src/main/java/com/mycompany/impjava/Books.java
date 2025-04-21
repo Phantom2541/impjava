@@ -1,11 +1,37 @@
 package com.mycompany.impjava;
 
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.table.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Vector;
+
+import javax.swing.AbstractCellEditor;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 
 public class Books extends JFrame {
     private JPanel sidebar;
@@ -39,7 +65,7 @@ public class Books extends JFrame {
         topBar.setPreferredSize(new Dimension(getWidth(), 80));
         topBar.setLayout(new BorderLayout());
 
-        JLabel welcomeLabel = new JLabel("Books Management", JLabel.CENTER);
+        JLabel welcomeLabel = new JLabel("List of Books", JLabel.CENTER);
         welcomeLabel.setFont(new Font("Verdana", Font.BOLD, 35));
         welcomeLabel.setForeground(Color.WHITE);
         topBar.add(welcomeLabel, BorderLayout.CENTER);
@@ -63,7 +89,7 @@ public class Books extends JFrame {
         buttonPanel.add(toggleButton, BorderLayout.CENTER);
         topBar.add(buttonPanel, BorderLayout.WEST);
 
-        JButton addBookButton = new JButton("Add Book");
+        JButton addBookButton = new JButton("+");
         addBookButton.setFont(new Font("Arial", Font.BOLD, 16));
         addBookButton.setForeground(Color.WHITE);
         addBookButton.setBackground(Color.decode("#5012a3"));
@@ -253,7 +279,7 @@ public class Books extends JFrame {
         }
     }
 
-    class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
+        class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
         private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
         private final JButton editButton = new JButton("Edit");
         private final JButton deleteButton = new JButton("Del");
