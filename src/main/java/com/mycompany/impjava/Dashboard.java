@@ -1,37 +1,17 @@
 package com.mycompany.impjava;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-
-public class Dashboard extends JFrame {
+public class Dashboard extends javax.swing.JFrame {
     private JPanel sidebar;
     private JPanel contentArea;
     private boolean isSidebarVisible = true;
 
     public Dashboard() {
         setTitle("Dashboard");
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);  // Makes the window maximized
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -100,12 +80,12 @@ public class Dashboard extends JFrame {
         // Table Setup
         String[] columnNames = {"ID", "TITLE", "AUTHOR", "PUBLISHER", "COPYRIGHT", "LCN", "SECTION", "ISACTIVE", "CREATED", "UPDATED"};
         Object[][] data = {
-            {"1", "Sample Book", "John Doe", "Sample Publisher", "2022", "LCN123", "Section A", "Yes", "2022-01-01", "2022-06-01"},
-            {"2", "Another Book", "Jane Smith", "Another Publisher", "2023", "LCN456", "Section B", "No", "2023-02-01", "2023-07-01"},
-            {"3", "Third Book", "Alice Johnson", "Third Publisher", "2024", "LCN789", "Section C", "Yes", "2024-03-01", "2024-08-01"},
-            {"4", "Temp Book A", "Temp Author A", "Temp Publisher A", "2025", "LCN111", "Section D", "Yes", "2025-01-15", "2025-04-10"},
-            {"5", "Temp Book B", "Temp Author B", "Temp Publisher B", "2025", "LCN222", "Section E", "No", "2025-02-20", "2025-04-11"},
-            {"6", "Temp Book C", "Temp Author C", "Temp Publisher C", "2025", "LCN333", "Section F", "Yes", "2025-03-25", "2025-04-12"}
+                {"1", "Sample Book", "John Doe", "Sample Publisher", "2022", "LCN123", "Section A", "Yes", "2022-01-01", "2022-06-01"},
+                {"2", "Another Book", "Jane Smith", "Another Publisher", "2023", "LCN456", "Section B", "No", "2023-02-01", "2023-07-01"},
+                {"3", "Third Book", "Alice Johnson", "Third Publisher", "2024", "LCN789", "Section C", "Yes", "2024-03-01", "2024-08-01"},
+                {"4", "Temp Book A", "Temp Author A", "Temp Publisher A", "2025", "LCN111", "Section D", "Yes", "2025-01-15", "2025-04-10"},
+                {"5", "Temp Book B", "Temp Author B", "Temp Publisher B", "2025", "LCN222", "Section E", "No", "2025-02-20", "2025-04-11"},
+                {"6", "Temp Book C", "Temp Author C", "Temp Publisher C", "2025", "LCN333", "Section F", "Yes", "2025-03-25", "2025-04-12"}
         };
 
         JTable table = new JTable(data, columnNames);
@@ -172,7 +152,6 @@ public class Dashboard extends JFrame {
 
         return panel;
     }
-
 
     private JButton createSidebarButton(String text) {
         JButton button = new JButton(text) {

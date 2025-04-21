@@ -10,7 +10,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import javax.swing.JOptionPane;
-
+import org.mindrot.jbcrypt.BCrypt;
+import com.mycompany.impjava.Dashboard;
+import java.sql.SQLException;
 /**
  *
  * @author Yuika
@@ -206,26 +208,34 @@ public class Login extends javax.swing.JFrame {
         String dbUser = "root";
         String dbPass = "";
 
-        try {
-            // Load the MySQL driver
+        // SQL query for fetching the hashed password from the database
+        String sql = "SELECT password FROM users WHERE email = ?";
+
+        try (Connection con = DriverManager.getConnection(url, dbUser, dbPass);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            // Load the MySQL driver (not required with JDBC 4.0+ but kept for legacy compatibility)
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            // Connect to the database
-            Connection con = DriverManager.getConnection(url, dbUser, dbPass);
-
-            // SQL query to fetch plain text password
-            String sql = "SELECT password FROM users WHERE email = ?";
-            PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
                 String dbPassword = rs.getString("password");
 
+                // Compare the stored password directly with the entered password (without BCrypt)
                 if (password.equals(dbPassword)) {
+                    // Login successful
                     JOptionPane.showMessageDialog(this, "✅ Login Successful! Welcome, " + email);
-                    // new Dashboard().setVisible(true);
-                    // this.dispose();
+
+                    // Open Dashboard and close login form
+                    Dashboard dashboard = new Dashboard();
+                    dashboard.setVisible(true);
+                    dashboard.pack();
+                    dashboard.setLocationRelativeTo(null);
+                    dashboard.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+
+                    this.dispose(); // Close the login form
                 } else {
                     JOptionPane.showMessageDialog(this, "Incorrect password!", "Login Failed", JOptionPane.ERROR_MESSAGE);
                 }
@@ -233,8 +243,10 @@ public class Login extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Email not found!", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }
 
-            con.close();
-        } catch (Exception e) {
+        } catch (ClassNotFoundException e) {
+            JOptionPane.showMessageDialog(this, "Database Driver Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
