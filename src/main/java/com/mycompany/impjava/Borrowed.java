@@ -37,14 +37,14 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
-public class Books extends JFrame {
+public class Borrowed extends JFrame {
     private JPanel sidebar, contentArea;
     private boolean isSidebarVisible = true;
     private DefaultTableModel model;
     private JTable table;
 
-    public Books() {
-        setTitle("Books");
+    public Borrowed() {
+        setTitle("Borrowed Records");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -56,7 +56,6 @@ public class Books extends JFrame {
         contentArea.setBackground(Color.WHITE);
 
         JPanel topBar = new JPanel() {
-            @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
@@ -68,7 +67,7 @@ public class Books extends JFrame {
         topBar.setPreferredSize(new Dimension(getWidth(), 80));
         topBar.setLayout(new BorderLayout());
 
-        JLabel welcomeLabel = new JLabel("List of Books", JLabel.CENTER);
+        JLabel welcomeLabel = new JLabel("List of Borrowed Books", JLabel.CENTER);
         welcomeLabel.setFont(new Font("Verdana", Font.BOLD, 35));
         welcomeLabel.setForeground(Color.WHITE);
         topBar.add(welcomeLabel, BorderLayout.CENTER);
@@ -109,11 +108,11 @@ public class Books extends JFrame {
 
         contentArea.add(topBar, BorderLayout.NORTH);
 
-        String[] columnNames = {"ID", "TITLE", "AUTHOR", "PUBLISHER", "COPYRIGHT", "LCN", "SECTION", "ISACTIVE", "ACTIONS"};
+        String[] columnNames = {"BorrowID", "BookID", "UserID", "BorrowedDate", "ReturnDate", "Fee", "ACTIONS"};
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model) {
             public boolean isCellEditable(int row, int column) {
-                return column == 8;
+                return column == 6;
             }
         };
 
@@ -134,12 +133,11 @@ public class Books extends JFrame {
         contentArea.add(tablePanel, BorderLayout.CENTER);
         add(contentArea, BorderLayout.CENTER);
 
-        loadBooksFromDatabase(); // Load data from MySQL
+        loadBorrowedsFromDatabase();
     }
 
     private JPanel createSidebar() {
         JPanel panel = new JPanel() {
-            @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
@@ -159,7 +157,6 @@ public class Books extends JFrame {
         menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
-        // Add Menu Items
         panel.add(createSidebarButton("Home"));
         panel.add(createSidebarButton("Books"));
         panel.add(createSidebarButton("Users"));
@@ -174,16 +171,7 @@ public class Books extends JFrame {
     }
 
     private JButton createSidebarButton(String text) {
-        JButton button = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (getModel().isPressed()) {
-                    setBackground(new Color(70, 70, 70));
-                }
-            }
-        };
-
+        JButton button = new JButton(text);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setForeground(Color.WHITE);
@@ -193,13 +181,11 @@ public class Books extends JFrame {
         button.setFont(new Font("Arial", Font.PLAIN, 18));
 
         button.addMouseListener(new MouseAdapter() {
-            @Override
             public void mouseEntered(MouseEvent e) {
                 button.setBackground(Color.decode("#6B00FF"));
                 button.setOpaque(true);
             }
 
-            @Override
             public void mouseExited(MouseEvent e) {
                 button.setBackground(null);
                 button.setOpaque(false);
@@ -222,7 +208,12 @@ public class Books extends JFrame {
                 break;
 
             case "Books":
-                //already on books side ewe
+                Books books = new Books();
+                books.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                books.setLocationRelativeTo(null);
+                books.setVisible(true); 
+                books.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
             break;
 
             case "Users":
@@ -253,12 +244,7 @@ public class Books extends JFrame {
             break;
 
             case "Borrows":
-                Borrowed borrowed= new Borrowed();
-                borrowed.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                borrowed.setLocationRelativeTo(null);
-                borrowed.setVisible(true); 
-                borrowed.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
+              //already on borrow side ewe
             break;
 
             case "Publishers":
@@ -295,8 +281,8 @@ public class Books extends JFrame {
     }
 
     private void openAddBookDialog(DefaultTableModel model) {
-        JTextField[] fields = new JTextField[8];
-        String[] labels = {"ID", "Title", "Author", "Publisher", "Copyright", "LCN", "Section", "Is Active"};
+        JTextField[] fields = new JTextField[6];
+        String[] labels = {"BorrowID", "BookID", "UserID", "BorrowedDate", "ReturnDate", "Fee"};
         JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
 
         for (int i = 0; i < labels.length; i++) {
@@ -305,19 +291,19 @@ public class Books extends JFrame {
             inputPanel.add(fields[i]);
         }
 
-        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Book", JOptionPane.OK_CANCEL_OPTION);
+        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Borrow Record", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection conn = DBConnection.getConnection()) {
-                String sql = "INSERT INTO books (id, title, author, publisher, copyright, lcn, section, isactive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                String sql = "INSERT INTO borroweds (borrowid, bookid, userid, borroweddate, returndate, fee) VALUES (?, ?, ?, ?, ?, ?)";
                 PreparedStatement stmt = conn.prepareStatement(sql);
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < 6; i++) {
                     stmt.setString(i + 1, fields[i].getText());
                 }
                 stmt.executeUpdate();
 
-                Object[] row = new Object[9];
-                for (int i = 0; i < 8; i++) row[i] = fields[i].getText();
-                row[8] = "Actions";
+                Object[] row = new Object[7];
+                for (int i = 0; i < 6; i++) row[i] = fields[i].getText();
+                row[6] = "Actions";
                 model.addRow(row);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -326,8 +312,8 @@ public class Books extends JFrame {
     }
 
     private void openEditDialog(int row) {
-        JTextField[] fields = new JTextField[8];
-        String[] labels = {"ID", "Title", "Author", "Publisher", "Copyright", "LCN", "Section", "Is Active"};
+        JTextField[] fields = new JTextField[6];
+        String[] labels = {"BorrowID", "BookID", "UserID", "BorrowedDate", "ReturnDate", "Fee"};
         JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
 
         for (int i = 0; i < labels.length; i++) {
@@ -336,18 +322,20 @@ public class Books extends JFrame {
             inputPanel.add(fields[i]);
         }
 
-        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Book", JOptionPane.OK_CANCEL_OPTION);
+        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Borrow Record", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection conn = DBConnection.getConnection()) {
-                String sql = "UPDATE books SET title=?, author=?, publisher=?, copyright=?, lcn=?, section=?, isactive=? WHERE id=?";
+                String sql = "UPDATE borroweds SET bookid=?, userid=?, borroweddate=?, returndate=?, fee=? WHERE borrowid=?";
                 PreparedStatement stmt = conn.prepareStatement(sql);
-                for (int i = 1; i < 8; i++) {
-                    stmt.setString(i, fields[i].getText());
-                }
-                stmt.setString(8, fields[0].getText());
+                stmt.setString(1, fields[1].getText());
+                stmt.setString(2, fields[2].getText());
+                stmt.setString(3, fields[3].getText());
+                stmt.setString(4, fields[4].getText());
+                stmt.setString(5, fields[5].getText());
+                stmt.setString(6, fields[0].getText());
                 stmt.executeUpdate();
 
-                for (int i = 0; i < 8; i++) model.setValueAt(fields[i].getText(), row, i);
+                for (int i = 0; i < 6; i++) model.setValueAt(fields[i].getText(), row, i);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -396,11 +384,11 @@ public class Books extends JFrame {
 
             deleteButton.addActionListener(e -> {
                 fireEditingStopped();
-                int confirm = JOptionPane.showConfirmDialog(Books.this, "Are you sure to delete this book?", "Confirm", JOptionPane.YES_NO_OPTION);
+                int confirm = JOptionPane.showConfirmDialog(Borrowed.this, "Are you sure to delete this borrow record?", "Confirm", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     try (Connection conn = DBConnection.getConnection()) {
                         String id = model.getValueAt(currentRow, 0).toString();
-                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM books WHERE id = ?");
+                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM borroweds WHERE borrowid = ?");
                         stmt.setString(1, id);
                         stmt.executeUpdate();
                         model.removeRow(currentRow);
@@ -421,14 +409,14 @@ public class Books extends JFrame {
         }
     }
 
-    private void loadBooksFromDatabase() {
+    private void loadBorrowedsFromDatabase() {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM books")) {
+             ResultSet rs = stmt.executeQuery("SELECT borrowid, bookid, userid, borroweddate, returndate, fee FROM borroweds")) {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                for (int i = 1; i <= 8; i++) {
+                for (int i = 1; i <= 6; i++) {
                     row.add(rs.getString(i));
                 }
                 row.add("Actions");
@@ -440,19 +428,6 @@ public class Books extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Books().setVisible(true));
+        SwingUtilities.invokeLater(() -> new Borrowed().setVisible(true));
     }
 }
-
-//class DBConnection {
-//    public static Connection getConnection() {
-//        try {
-//            Class.forName("com.mysql.cj.jdbc.Driver");
-//            return DriverManager.getConnection("jdbc:mysql://localhost:3306/implibrary", "root", "");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            JOptionPane.showMessageDialog(null, "Failed to connect to database.");
-//            return null;
-//        }
-//    }
-//}

@@ -37,14 +37,14 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
-public class Books extends JFrame {
+public class Sales extends JFrame {
     private JPanel sidebar, contentArea;
     private boolean isSidebarVisible = true;
     private DefaultTableModel model;
     private JTable table;
 
-    public Books() {
-        setTitle("Books");
+    public Sales() {
+        setTitle("Sales");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -56,19 +56,17 @@ public class Books extends JFrame {
         contentArea.setBackground(Color.WHITE);
 
         JPanel topBar = new JPanel() {
-            @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
-                GradientPaint gradient = new GradientPaint(0, 0, Color.decode("#42009F"), getWidth(), 0, Color.decode("#834AD3"));
-                g2d.setPaint(gradient);
+                g2d.setPaint(new GradientPaint(0, 0, Color.decode("#42009F"), getWidth(), 0, Color.decode("#834AD3")));
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
         topBar.setPreferredSize(new Dimension(getWidth(), 80));
         topBar.setLayout(new BorderLayout());
 
-        JLabel welcomeLabel = new JLabel("List of Books", JLabel.CENTER);
+        JLabel welcomeLabel = new JLabel("List of Sales", JLabel.CENTER);
         welcomeLabel.setFont(new Font("Verdana", Font.BOLD, 35));
         welcomeLabel.setForeground(Color.WHITE);
         topBar.add(welcomeLabel, BorderLayout.CENTER);
@@ -77,7 +75,6 @@ public class Books extends JFrame {
         toggleButton.setFont(new Font("SansSerif", Font.BOLD, 28));
         toggleButton.setForeground(Color.WHITE);
         toggleButton.setFocusPainted(false);
-        toggleButton.setBorderPainted(false);
         toggleButton.setContentAreaFilled(false);
         toggleButton.setOpaque(true);
         toggleButton.setBackground(new Color(80, 30, 120));
@@ -99,7 +96,7 @@ public class Books extends JFrame {
         addBookButton.setFocusPainted(false);
         addBookButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         addBookButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        addBookButton.addActionListener(e -> openAddBookDialog(model));
+        addBookButton.addActionListener(e -> openAddDialog());
 
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightPanel.setOpaque(false);
@@ -109,17 +106,15 @@ public class Books extends JFrame {
 
         contentArea.add(topBar, BorderLayout.NORTH);
 
-        String[] columnNames = {"ID", "TITLE", "AUTHOR", "PUBLISHER", "COPYRIGHT", "LCN", "SECTION", "ISACTIVE", "ACTIONS"};
+        String[] columnNames = {"SalesID", "StaffID", "UserID", "BookID", "Quantity", "Amount", "ACTIONS"};
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model) {
             public boolean isCellEditable(int row, int column) {
-                return column == 8;
+                return column == 6;
             }
         };
 
-        table.setFillsViewportHeight(true);
         table.setRowHeight(40);
-        table.setFont(new Font("Arial", Font.PLAIN, 15));
         table.getTableHeader().setBackground(new Color(80, 30, 120));
         table.getTableHeader().setForeground(Color.WHITE);
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
@@ -134,12 +129,11 @@ public class Books extends JFrame {
         contentArea.add(tablePanel, BorderLayout.CENTER);
         add(contentArea, BorderLayout.CENTER);
 
-        loadBooksFromDatabase(); // Load data from MySQL
+        loadSalesFromDatabase();
     }
 
     private JPanel createSidebar() {
         JPanel panel = new JPanel() {
-            @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
@@ -159,7 +153,6 @@ public class Books extends JFrame {
         menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
-        // Add Menu Items
         panel.add(createSidebarButton("Home"));
         panel.add(createSidebarButton("Books"));
         panel.add(createSidebarButton("Users"));
@@ -174,16 +167,7 @@ public class Books extends JFrame {
     }
 
     private JButton createSidebarButton(String text) {
-        JButton button = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (getModel().isPressed()) {
-                    setBackground(new Color(70, 70, 70));
-                }
-            }
-        };
-
+        JButton button = new JButton(text);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setForeground(Color.WHITE);
@@ -193,13 +177,11 @@ public class Books extends JFrame {
         button.setFont(new Font("Arial", Font.PLAIN, 18));
 
         button.addMouseListener(new MouseAdapter() {
-            @Override
             public void mouseEntered(MouseEvent e) {
                 button.setBackground(Color.decode("#6B00FF"));
                 button.setOpaque(true);
             }
 
-            @Override
             public void mouseExited(MouseEvent e) {
                 button.setBackground(null);
                 button.setOpaque(false);
@@ -222,7 +204,12 @@ public class Books extends JFrame {
                 break;
 
             case "Books":
-                //already on books side ewe
+                Books books = new Books();
+                books.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                books.setLocationRelativeTo(null);
+                books.setVisible(true); 
+                books.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
             break;
 
             case "Users":
@@ -244,12 +231,7 @@ public class Books extends JFrame {
             break;
 
             case "Sales":
-                Sales sales = new Sales();
-                sales.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                sales.setLocationRelativeTo(null);
-                sales.setVisible(true); 
-                sales.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
+                //already on sales side ewe
             break;
 
             case "Borrows":
@@ -294,9 +276,9 @@ public class Books extends JFrame {
         repaint();
     }
 
-    private void openAddBookDialog(DefaultTableModel model) {
-        JTextField[] fields = new JTextField[8];
-        String[] labels = {"ID", "Title", "Author", "Publisher", "Copyright", "LCN", "Section", "Is Active"};
+    private void openAddDialog() {
+        JTextField[] fields = new JTextField[6];
+        String[] labels = {"SalesID", "StaffID", "UserID", "BookID", "Quantity", "Amount"};
         JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
 
         for (int i = 0; i < labels.length; i++) {
@@ -305,19 +287,19 @@ public class Books extends JFrame {
             inputPanel.add(fields[i]);
         }
 
-        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Book", JOptionPane.OK_CANCEL_OPTION);
+        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Sale", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection conn = DBConnection.getConnection()) {
-                String sql = "INSERT INTO books (id, title, author, publisher, copyright, lcn, section, isactive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                String sql = "INSERT INTO sales (sales_id, staff_id, user_id, book_id, quantity, amount) VALUES (?, ?, ?, ?, ?, ?)";
                 PreparedStatement stmt = conn.prepareStatement(sql);
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < 6; i++) {
                     stmt.setString(i + 1, fields[i].getText());
                 }
                 stmt.executeUpdate();
 
-                Object[] row = new Object[9];
-                for (int i = 0; i < 8; i++) row[i] = fields[i].getText();
-                row[8] = "Actions";
+                Vector<Object> row = new Vector<>();
+                for (JTextField field : fields) row.add(field.getText());
+                row.add("Actions");
                 model.addRow(row);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -326,8 +308,8 @@ public class Books extends JFrame {
     }
 
     private void openEditDialog(int row) {
-        JTextField[] fields = new JTextField[8];
-        String[] labels = {"ID", "Title", "Author", "Publisher", "Copyright", "LCN", "Section", "Is Active"};
+        JTextField[] fields = new JTextField[6];
+        String[] labels = {"SalesID", "StaffID", "UserID", "BookID", "Quantity", "Amount"};
         JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
 
         for (int i = 0; i < labels.length; i++) {
@@ -336,18 +318,18 @@ public class Books extends JFrame {
             inputPanel.add(fields[i]);
         }
 
-        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Book", JOptionPane.OK_CANCEL_OPTION);
+        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Sale", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection conn = DBConnection.getConnection()) {
-                String sql = "UPDATE books SET title=?, author=?, publisher=?, copyright=?, lcn=?, section=?, isactive=? WHERE id=?";
+                String sql = "UPDATE sales SET staff_id=?, user_id=?, book_id=?, quantity=?, amount=? WHERE sales_id=?";
                 PreparedStatement stmt = conn.prepareStatement(sql);
-                for (int i = 1; i < 8; i++) {
+                for (int i = 1; i < 6; i++) {
                     stmt.setString(i, fields[i].getText());
                 }
-                stmt.setString(8, fields[0].getText());
+                stmt.setString(6, fields[0].getText());
                 stmt.executeUpdate();
 
-                for (int i = 0; i < 8; i++) model.setValueAt(fields[i].getText(), row, i);
+                for (int i = 0; i < 6; i++) model.setValueAt(fields[i].getText(), row, i);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -362,12 +344,6 @@ public class Books extends JFrame {
             setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
             add(editButton);
             add(deleteButton);
-            editButton.setFocusable(false);
-            deleteButton.setFocusable(false);
-            editButton.setPreferredSize(new Dimension(55, 25));
-            deleteButton.setPreferredSize(new Dimension(55, 25));
-            editButton.setFont(new Font("Arial", Font.BOLD, 10));
-            deleteButton.setFont(new Font("Arial", Font.BOLD, 11));
         }
 
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -384,10 +360,6 @@ public class Books extends JFrame {
         public ButtonEditor(JCheckBox checkBox) {
             panel.add(editButton);
             panel.add(deleteButton);
-            editButton.setPreferredSize(new Dimension(55, 25));
-            deleteButton.setPreferredSize(new Dimension(55, 25));
-            editButton.setFont(new Font("Arial", Font.BOLD, 10));
-            deleteButton.setFont(new Font("Arial", Font.BOLD, 11));
 
             editButton.addActionListener(e -> {
                 fireEditingStopped();
@@ -396,11 +368,11 @@ public class Books extends JFrame {
 
             deleteButton.addActionListener(e -> {
                 fireEditingStopped();
-                int confirm = JOptionPane.showConfirmDialog(Books.this, "Are you sure to delete this book?", "Confirm", JOptionPane.YES_NO_OPTION);
+                int confirm = JOptionPane.showConfirmDialog(Sales.this, "Are you sure to delete this entry?", "Confirm", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     try (Connection conn = DBConnection.getConnection()) {
                         String id = model.getValueAt(currentRow, 0).toString();
-                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM books WHERE id = ?");
+                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM sales WHERE sales_id = ?");
                         stmt.setString(1, id);
                         stmt.executeUpdate();
                         model.removeRow(currentRow);
@@ -421,14 +393,14 @@ public class Books extends JFrame {
         }
     }
 
-    private void loadBooksFromDatabase() {
+    private void loadSalesFromDatabase() {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM books")) {
+             ResultSet rs = stmt.executeQuery("SELECT sales_id, staff_id, user_id, book_id, quantity, amount FROM sales")) {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                for (int i = 1; i <= 8; i++) {
+                for (int i = 1; i <= 6; i++) {
                     row.add(rs.getString(i));
                 }
                 row.add("Actions");
@@ -440,19 +412,6 @@ public class Books extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Books().setVisible(true));
+        SwingUtilities.invokeLater(() -> new Sales().setVisible(true));
     }
 }
-
-//class DBConnection {
-//    public static Connection getConnection() {
-//        try {
-//            Class.forName("com.mysql.cj.jdbc.Driver");
-//            return DriverManager.getConnection("jdbc:mysql://localhost:3306/implibrary", "root", "");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            JOptionPane.showMessageDialog(null, "Failed to connect to database.");
-//            return null;
-//        }
-//    }
-//}

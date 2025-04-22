@@ -1,8 +1,26 @@
 package com.mycompany.impjava;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 public class Dashboard extends JFrame {
     private JPanel sidebar;
@@ -100,7 +118,10 @@ public class Dashboard extends JFrame {
         panel.add(createSidebarButton("Home"));
         panel.add(createSidebarButton("Books"));
         panel.add(createSidebarButton("Users"));
-
+        panel.add(createSidebarButton("Staffs"));
+        panel.add(createSidebarButton("Sales"));
+        panel.add(createSidebarButton("Borrows"));
+        panel.add(createSidebarButton("Publishers"));
         panel.add(Box.createVerticalGlue());
         panel.add(createSidebarButton("Logout"));
 
@@ -145,24 +166,65 @@ public class Dashboard extends JFrame {
     }
 
     private void handleNavigation(String page) {
-        contentArea.removeAll();
-        contentArea.add(createTopBar(), BorderLayout.NORTH);
-
         switch (page) {
             case "Home":
-                contentArea.add(createHomePanel(), BorderLayout.CENTER);
+                //already on dashboard side ewe
                 break;
+
             case "Books":
                 Books books = new Books();
-                books.setVisible(true);
-                books.pack();
+                books.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 books.setLocationRelativeTo(null);
-                books.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+                books.setVisible(true); 
+                books.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-                break;
+            break;
+
             case "Users":
-                contentArea.add(createUsersPanel(), BorderLayout.CENTER);
-                break;
+                Users users = new Users();
+                users.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                users.setLocationRelativeTo(null);
+                users.setVisible(true); 
+                users.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
+            break;
+
+            case "Staffs":
+                Staffs staffs = new Staffs();
+                staffs.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                staffs.setLocationRelativeTo(null);
+                staffs.setVisible(true); 
+                staffs.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
+            break;
+
+            case "Sales":
+                Sales sales = new Sales();
+                sales.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                sales.setLocationRelativeTo(null);
+                sales.setVisible(true); 
+                sales.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
+            break;
+
+            case "Borrows":
+                Borrowed borrowed= new Borrowed();
+                borrowed.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                borrowed.setLocationRelativeTo(null);
+                borrowed.setVisible(true); 
+                borrowed.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
+            break;
+
+            case "Publishers":
+            Publisher publisher= new Publisher();
+            publisher.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            publisher.setLocationRelativeTo(null);
+            publisher.setVisible(true); 
+            publisher.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            this.dispose();
+            break;
+
             case "Logout":
                 int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
