@@ -4,15 +4,6 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-
 public class Dashboard extends JFrame {
     private JPanel sidebar;
     private JPanel contentArea;
@@ -20,19 +11,22 @@ public class Dashboard extends JFrame {
 
     public Dashboard() {
         setTitle("Dashboard");
-        setExtendedState(JFrame.MAXIMIZED_BOTH);  // Makes the window maximized
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Sidebar
         sidebar = createSidebar();
         add(sidebar, BorderLayout.WEST);
 
-        // Content Area
         contentArea = new JPanel(new BorderLayout());
         contentArea.setBackground(Color.WHITE);
+        contentArea.add(createTopBar(), BorderLayout.NORTH);
+        contentArea.add(createHomePanel(), BorderLayout.CENTER); // Default view
+        add(contentArea, BorderLayout.CENTER);
+    }
 
-        // Top Bar with gradient background
+    private JPanel createTopBar() {
         JPanel topBar = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -46,24 +40,18 @@ public class Dashboard extends JFrame {
         topBar.setPreferredSize(new Dimension(getWidth(), 80));
         topBar.setLayout(new BorderLayout());
 
-        // Welcome Label
         JLabel welcomeLabel = new JLabel("Welcome to IMP Library", JLabel.CENTER);
         welcomeLabel.setFont(new Font("Verdana", Font.BOLD, 35));
         welcomeLabel.setForeground(Color.WHITE);
         topBar.add(welcomeLabel, BorderLayout.CENTER);
 
-        // Custom Toggle Button
         JButton toggleButton = new JButton("☰") {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                if (getModel().isPressed()) {
-                    setBackground(new Color(90, 40, 130));
-                } else if (getModel().isRollover()) {
-                    setBackground(new Color(100, 50, 150));
-                } else {
-                    setBackground(new Color(80, 30, 120));
-                }
+                if (getModel().isPressed()) setBackground(new Color(90, 40, 130));
+                else if (getModel().isRollover()) setBackground(new Color(100, 50, 150));
+                else setBackground(new Color(80, 30, 120));
             }
         };
         toggleButton.setFont(new Font("SansSerif", Font.BOLD, 28));
@@ -77,17 +65,13 @@ public class Dashboard extends JFrame {
         toggleButton.setToolTipText("Toggle Sidebar");
         toggleButton.addActionListener(e -> toggleSidebar());
 
-        // Add toggle button to a padded transparent panel
         JPanel buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.setOpaque(false);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         buttonPanel.add(toggleButton, BorderLayout.CENTER);
 
         topBar.add(buttonPanel, BorderLayout.WEST);
-        contentArea.add(topBar, BorderLayout.NORTH);
-
-        // Add the content area to the frame
-        add(contentArea, BorderLayout.CENTER);
+        return topBar;
     }
 
     private JPanel createSidebar() {
@@ -103,8 +87,6 @@ public class Dashboard extends JFrame {
         };
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setPreferredSize(new Dimension(300, getHeight()));
-
-        // ✅ Add white border to the sidebar
         panel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
 
         JLabel menuListLabel = new JLabel("Menu List");
@@ -114,20 +96,13 @@ public class Dashboard extends JFrame {
         menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
-        String[] menuItems = {
-                "Home", "Books", "Users"
-        };
-
-        for (String item : menuItems) {
-            panel.add(createSidebarButton(item));
-        }
+        // Add Menu Items
+        panel.add(createSidebarButton("Home"));
+        panel.add(createSidebarButton("Books"));
+        panel.add(createSidebarButton("Users"));
 
         panel.add(Box.createVerticalGlue());
-
-        JButton logoutButton = createSidebarButton("Logout");
-        logoutButton.setFont(new Font("Arial", Font.BOLD, 25));
-        logoutButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(logoutButton);
+        panel.add(createSidebarButton("Logout"));
 
         return panel;
     }
@@ -145,7 +120,6 @@ public class Dashboard extends JFrame {
 
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
-        button.setBackground(null);
         button.setForeground(Color.WHITE);
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         button.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -166,9 +140,65 @@ public class Dashboard extends JFrame {
             }
         });
 
-        button.addActionListener(e -> JOptionPane.showMessageDialog(this, text + " clicked!"));
-
+        button.addActionListener(e -> handleNavigation(text));
         return button;
+    }
+
+    private void handleNavigation(String page) {
+        contentArea.removeAll();
+        contentArea.add(createTopBar(), BorderLayout.NORTH);
+
+        switch (page) {
+            case "Home":
+                contentArea.add(createHomePanel(), BorderLayout.CENTER);
+                break;
+            case "Books":
+                Books books = new Books();
+                books.setVisible(true);
+                books.pack();
+                books.setLocationRelativeTo(null);
+                books.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+                this.dispose();
+                break;
+            case "Users":
+                contentArea.add(createUsersPanel(), BorderLayout.CENTER);
+                break;
+            case "Logout":
+                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    Login login = new Login();
+                    login.setVisible(true);
+                    login.pack();
+                    login.setLocationRelativeTo(null);
+                    login.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+                    this.dispose();
+                }
+                break;
+        }
+
+        contentArea.revalidate();
+        contentArea.repaint();
+    }
+
+    private JPanel createHomePanel() {
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.WHITE);
+        panel.add(new JLabel("This is the Home Page"));
+        return panel;
+    }
+
+    private JPanel createBooksPanel() {
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.LIGHT_GRAY);
+        panel.add(new JLabel("This is the Books Page"));
+        return panel;
+    }
+
+    private JPanel createUsersPanel() {
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.WHITE);
+        panel.add(new JLabel("This is the Users Page"));
+        return panel;
     }
 
     private void toggleSidebar() {
@@ -179,7 +209,11 @@ public class Dashboard extends JFrame {
     }
 
     public static void main(String[] args) {
-        Dashboard frame = new Dashboard();
-        frame.setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            Dashboard frame = new Dashboard();
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setVisible(true); // Show first
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Then maximize
+        });
     }
 }

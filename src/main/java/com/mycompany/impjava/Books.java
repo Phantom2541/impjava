@@ -1,41 +1,14 @@
 package com.mycompany.impjava;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
 import java.util.Vector;
-
-import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
+import javax.swing.*;
+import javax.swing.table.*;
 
 public class Books extends JFrame {
-    private JPanel sidebar;
-    private JPanel contentArea;
+    private JPanel sidebar, contentArea;
     private boolean isSidebarVisible = true;
     private DefaultTableModel model;
     private JTable table;
@@ -107,21 +80,7 @@ public class Books extends JFrame {
         contentArea.add(topBar, BorderLayout.NORTH);
 
         String[] columnNames = {"ID", "TITLE", "AUTHOR", "PUBLISHER", "COPYRIGHT", "LCN", "SECTION", "ISACTIVE", "ACTIONS"};
-        Object[][] data = {
-                {"1", "Sample Book", "John Doe", "Sample Publisher", "2022", "LCN123", "Section A", "Yes"},
-                {"2", "Another Book", "Jane Smith", "Another Publisher", "2023", "LCN456", "Section B", "No"},
-        };
-
         model = new DefaultTableModel(columnNames, 0);
-        for (Object[] row : data) {
-            Vector<Object> rowData = new Vector<>();
-            for (Object cell : row) {
-                rowData.add(cell);
-            }
-            rowData.add("Actions");
-            model.addRow(rowData);
-        }
-
         table = new JTable(model) {
             public boolean isCellEditable(int row, int column) {
                 return column == 8;
@@ -142,9 +101,10 @@ public class Books extends JFrame {
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
-
         contentArea.add(tablePanel, BorderLayout.CENTER);
         add(contentArea, BorderLayout.CENTER);
+
+        loadBooksFromDatabase(); // Load data from MySQL
     }
 
     private JPanel createSidebar() {
@@ -232,10 +192,21 @@ public class Books extends JFrame {
 
         int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Book", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-            Object[] row = new Object[9];
-            for (int i = 0; i < 8; i++) row[i] = fields[i].getText();
-            row[8] = "Actions";
-            model.addRow(row);
+            try (Connection conn = DBConnection.getConnection()) {
+                String sql = "INSERT INTO books (id, title, author, publisher, copyright, lcn, section, isactive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                for (int i = 0; i < 8; i++) {
+                    stmt.setString(i + 1, fields[i].getText());
+                }
+                stmt.executeUpdate();
+
+                Object[] row = new Object[9];
+                for (int i = 0; i < 8; i++) row[i] = fields[i].getText();
+                row[8] = "Actions";
+                model.addRow(row);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -252,7 +223,19 @@ public class Books extends JFrame {
 
         int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Book", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-            for (int i = 0; i < 8; i++) model.setValueAt(fields[i].getText(), row, i);
+            try (Connection conn = DBConnection.getConnection()) {
+                String sql = "UPDATE books SET title=?, author=?, publisher=?, copyright=?, lcn=?, section=?, isactive=? WHERE id=?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                for (int i = 1; i < 8; i++) {
+                    stmt.setString(i, fields[i].getText());
+                }
+                stmt.setString(8, fields[0].getText());
+                stmt.executeUpdate();
+
+                for (int i = 0; i < 8; i++) model.setValueAt(fields[i].getText(), row, i);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -262,34 +245,35 @@ public class Books extends JFrame {
 
         public ButtonRenderer() {
             setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+            add(editButton);
+            add(deleteButton);
             editButton.setFocusable(false);
             deleteButton.setFocusable(false);
             editButton.setPreferredSize(new Dimension(55, 25));
             deleteButton.setPreferredSize(new Dimension(55, 25));
             editButton.setFont(new Font("Arial", Font.BOLD, 10));
             deleteButton.setFont(new Font("Arial", Font.BOLD, 11));
-            add(editButton);
-            add(deleteButton);
         }
 
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus,
-                                                       int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             return this;
         }
     }
 
-        class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
+    class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
         private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
         private final JButton editButton = new JButton("Edit");
         private final JButton deleteButton = new JButton("Del");
         private int currentRow;
 
         public ButtonEditor(JCheckBox checkBox) {
+            panel.add(editButton);
+            panel.add(deleteButton);
             editButton.setPreferredSize(new Dimension(55, 25));
             deleteButton.setPreferredSize(new Dimension(55, 25));
             editButton.setFont(new Font("Arial", Font.BOLD, 10));
             deleteButton.setFont(new Font("Arial", Font.BOLD, 11));
+
             editButton.addActionListener(e -> {
                 fireEditingStopped();
                 openEditDialog(currentRow);
@@ -299,17 +283,21 @@ public class Books extends JFrame {
                 fireEditingStopped();
                 int confirm = JOptionPane.showConfirmDialog(Books.this, "Are you sure to delete this book?", "Confirm", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    model.removeRow(currentRow);
+                    try (Connection conn = DBConnection.getConnection()) {
+                        String id = model.getValueAt(currentRow, 0).toString();
+                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM books WHERE id = ?");
+                        stmt.setString(1, id);
+                        stmt.executeUpdate();
+                        model.removeRow(currentRow);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                 }
             });
-
-            panel.add(editButton);
-            panel.add(deleteButton);
         }
 
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                                                     boolean isSelected, int row, int column) {
-            this.currentRow = row;
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            currentRow = row;
             return panel;
         }
 
@@ -318,7 +306,38 @@ public class Books extends JFrame {
         }
     }
 
+    private void loadBooksFromDatabase() {
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM books")) {
+
+            while (rs.next()) {
+                Vector<Object> row = new Vector<>();
+                for (int i = 1; i <= 8; i++) {
+                    row.add(rs.getString(i));
+                }
+                row.add("Actions");
+                model.addRow(row);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Books().setVisible(true));
     }
 }
+
+//class DBConnection {
+//    public static Connection getConnection() {
+//        try {
+//            Class.forName("com.mysql.cj.jdbc.Driver");
+//            return DriverManager.getConnection("jdbc:mysql://localhost:3306/implibrary", "root", "");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            JOptionPane.showMessageDialog(null, "Failed to connect to database.");
+//            return null;
+//        }
+//    }
+//}
