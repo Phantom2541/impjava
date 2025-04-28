@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 // import org.mindrot.jbcrypt.BCrypt;
 import com.mycompany.impjava.Dashboard;
 import java.sql.SQLException;
@@ -230,10 +230,10 @@ public class Login extends javax.swing.JFrame {
 
                     // Open Dashboard and close login form
                     Dashboard dashboard = new Dashboard();
-                    dashboard.setVisible(true);
-                    dashboard.pack();
-                    dashboard.setLocationRelativeTo(null);
                     dashboard.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+                    dashboard.setVisible(true);
+                    dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
 
                     this.dispose(); // Close the login form
                 } else {
