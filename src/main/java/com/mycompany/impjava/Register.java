@@ -342,7 +342,7 @@ public class Register extends javax.swing.JFrame {
 
             // JDBC connection
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/implibrary", "root", "");
+            Connection conn = DBConnection.getConnection();
 
             String query = "INSERT INTO users (name, email, dob, password) VALUES (?, ?, ?, ?)";
             PreparedStatement stmt = conn.prepareStatement(query);

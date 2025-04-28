@@ -204,14 +204,10 @@ public class Login extends javax.swing.JFrame {
         String email = jTextField1.getText();
         String password = String.valueOf(jPasswordField1.getPassword());
 
-        String url = "jdbc:mysql://localhost:3306/implibrary";
-        String dbUser = "root";
-        String dbPass = "";
-
         // SQL query for fetching the hashed password from the database
         String sql = "SELECT password FROM users WHERE email = ?";
 
-        try (Connection con = DriverManager.getConnection(url, dbUser, dbPass);
+        try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             // Load the MySQL driver (not required with JDBC 4.0+ but kept for legacy compatibility)
