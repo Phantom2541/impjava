@@ -17,22 +17,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
-import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
@@ -108,7 +97,7 @@ public class Borrowed extends JFrame {
 
         contentArea.add(topBar, BorderLayout.NORTH);
 
-        String[] columnNames = {"BorrowID", "BookID", "UserID", "BorrowedDate", "ReturnDate", "Fee", "ACTIONS"};
+        String[] columnNames = {"BorrowID", "BookID", "UserID", "BorrowedDate", "ReturnedDate", "Fee", "ACTIONS"};
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model) {
             public boolean isCellEditable(int row, int column) {
@@ -202,7 +191,7 @@ public class Borrowed extends JFrame {
                 Dashboard dashboard = new Dashboard();
                 dashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 dashboard.setLocationRelativeTo(null);
-                dashboard.setVisible(true); 
+                dashboard.setVisible(true);
                 dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
                 break;
@@ -211,7 +200,7 @@ public class Borrowed extends JFrame {
                 Books books = new Books();
                 books.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 books.setLocationRelativeTo(null);
-                books.setVisible(true); 
+                books.setVisible(true);
                 books.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
             break;
@@ -220,7 +209,7 @@ public class Borrowed extends JFrame {
                 Users users = new Users();
                 users.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 users.setLocationRelativeTo(null);
-                users.setVisible(true); 
+                users.setVisible(true);
                 users.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
             break;
@@ -229,7 +218,7 @@ public class Borrowed extends JFrame {
                 Staffs staffs = new Staffs();
                 staffs.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 staffs.setLocationRelativeTo(null);
-                staffs.setVisible(true); 
+                staffs.setVisible(true);
                 staffs.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
             break;
@@ -238,7 +227,7 @@ public class Borrowed extends JFrame {
                 Sales sales = new Sales();
                 sales.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 sales.setLocationRelativeTo(null);
-                sales.setVisible(true); 
+                sales.setVisible(true);
                 sales.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
             break;
@@ -251,7 +240,7 @@ public class Borrowed extends JFrame {
             Publisher publisher= new Publisher();
             publisher.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             publisher.setLocationRelativeTo(null);
-            publisher.setVisible(true); 
+            publisher.setVisible(true);
             publisher.setExtendedState(JFrame.MAXIMIZED_BOTH);
             this.dispose();
             break;
@@ -281,66 +270,190 @@ public class Borrowed extends JFrame {
     }
 
     private void openAddBookDialog(DefaultTableModel model) {
-        JTextField[] fields = new JTextField[6];
-        String[] labels = {"BorrowID", "BookID", "UserID", "BorrowedDate", "ReturnDate", "Fee"};
-        JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+        JComboBox<String> bookComboBox = new JComboBox<>();
+        JComboBox<String> userComboBox = new JComboBox<>();
+        JTextField borrowedDateField = new JTextField();
+        JTextField returnedDateField = new JTextField();
+        JTextField feeField = new JTextField();
 
-        for (int i = 0; i < labels.length; i++) {
-            inputPanel.add(new JLabel(labels[i] + ":"));
-            fields[i] = new JTextField();
-            inputPanel.add(fields[i]);
+        // Load Book IDs into combo box
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT id, title FROM books")) {
+
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String title = rs.getString("title");
+                bookComboBox.addItem(id + " - " + title);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+
+        // Load User IDs into combo box
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT id, name FROM users")) {
+
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String name = rs.getString("name");
+                userComboBox.addItem(id + " - " + name);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+        inputPanel.add(new JLabel("BookID:"));
+        inputPanel.add(bookComboBox);
+        inputPanel.add(new JLabel("UserID:"));
+        inputPanel.add(userComboBox);
+        inputPanel.add(new JLabel("BorrowedDate (yyyy-mm-dd):"));
+        inputPanel.add(borrowedDateField);
+        inputPanel.add(new JLabel("ReturnedDate (yyyy-mm-dd):"));
+        inputPanel.add(returnedDateField);
+        inputPanel.add(new JLabel("Fee:"));
+        inputPanel.add(feeField);
 
         int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Borrow Record", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection conn = DBConnection.getConnection()) {
-                String sql = "INSERT INTO borroweds (borrowid, bookid, userid, borroweddate, returndate, fee) VALUES (?, ?, ?, ?, ?, ?)";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                for (int i = 0; i < 6; i++) {
-                    stmt.setString(i + 1, fields[i].getText());
-                }
+                String sql = "INSERT INTO borroweds (bookId, userId, borrowedDate, returnedDate, fee) VALUES (?, ?, ?, ?, ?)";
+                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+
+                // Get only ID part from selected item (before the " - ")
+                String selectedBook = bookComboBox.getSelectedItem().toString().split(" - ")[0];
+                String selectedUser = userComboBox.getSelectedItem().toString().split(" - ")[0];
+
+                stmt.setString(1, selectedBook);
+                stmt.setString(2, selectedUser);
+                stmt.setString(3, borrowedDateField.getText());
+                stmt.setString(4, returnedDateField.getText());
+                stmt.setString(5, feeField.getText());
                 stmt.executeUpdate();
 
-                Object[] row = new Object[7];
-                for (int i = 0; i < 6; i++) row[i] = fields[i].getText();
-                row[6] = "Actions";
-                model.addRow(row);
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    Object[] row = new Object[7];
+                    row[0] = rs.getInt(1); // BorrowID from database
+                    row[1] = bookComboBox.getSelectedItem().toString().split(" - ", 2)[1]; // Book title
+                    row[2] = userComboBox.getSelectedItem().toString().split(" - ", 2)[1]; // User name
+                    row[3] = borrowedDateField.getText();
+                    row[4] = returnedDateField.getText();
+                    row[5] = feeField.getText();
+                    row[6] = "Actions";
+                    model.addRow(row);
+                }
+
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     }
 
-    private void openEditDialog(int row) {
-        JTextField[] fields = new JTextField[6];
-        String[] labels = {"BorrowID", "BookID", "UserID", "BorrowedDate", "ReturnDate", "Fee"};
-        JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-
-        for (int i = 0; i < labels.length; i++) {
-            inputPanel.add(new JLabel(labels[i] + ":"));
-            fields[i] = new JTextField(model.getValueAt(row, i).toString());
-            inputPanel.add(fields[i]);
+    private String[] getUsers() {
+        List<String> users = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection()) {
+            String sql = "SELECT id, name FROM users";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                users.add(id + " - " + name);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+        return users.toArray(new String[0]);
+    }
 
+    private String[] getBooks() {
+        List<String> books = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection()) {
+            String sql = "SELECT id, title FROM books";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String title = rs.getString("title");
+                books.add(id + " - " + title);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return books.toArray(new String[0]);
+    }
+
+
+
+
+    private void openEditDialog(int row) {
+        JTextField borrowIdField = new JTextField(model.getValueAt(row, 0).toString());
+        borrowIdField.setEditable(false);
+
+        // Create combo boxes for Book and User selection
+        JComboBox<String> bookCombo = new JComboBox<>(getBooks()); // Get available books from the database
+        JComboBox<String> userCombo = new JComboBox<>(getUsers()); // Get available users from the database
+
+        // Set the selected items to the current BookID and UserID in the table
+        bookCombo.setSelectedItem(model.getValueAt(row, 1).toString()); // Set the selected BookID
+        userCombo.setSelectedItem(model.getValueAt(row, 2).toString()); // Set the selected UserID
+
+        JTextField borrowedDateField = new JTextField(model.getValueAt(row, 3).toString());
+        JTextField returnedDateField = new JTextField(model.getValueAt(row, 4).toString());
+        JTextField feeField = new JTextField(model.getValueAt(row, 5).toString());
+
+        // Create the input panel
+        JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+        inputPanel.add(new JLabel("Borrow ID:"));
+        inputPanel.add(borrowIdField);
+        inputPanel.add(new JLabel("Book:"));
+        inputPanel.add(bookCombo);
+        inputPanel.add(new JLabel("User:"));
+        inputPanel.add(userCombo);
+        inputPanel.add(new JLabel("Borrowed Date:"));
+        inputPanel.add(borrowedDateField);
+        inputPanel.add(new JLabel("Returned Date:"));
+        inputPanel.add(returnedDateField);
+        inputPanel.add(new JLabel("Fee:"));
+        inputPanel.add(feeField);
+
+        // Show the dialog and process the result
         int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Borrow Record", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             try (Connection conn = DBConnection.getConnection()) {
-                String sql = "UPDATE borroweds SET bookid=?, userid=?, borroweddate=?, returndate=?, fee=? WHERE borrowid=?";
+                String sql = "UPDATE borroweds SET bookId=?, userId=?, borrowedDate=?, returnedDate=?, fee=? WHERE id=?";
                 PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, fields[1].getText());
-                stmt.setString(2, fields[2].getText());
-                stmt.setString(3, fields[3].getText());
-                stmt.setString(4, fields[4].getText());
-                stmt.setString(5, fields[5].getText());
-                stmt.setString(6, fields[0].getText());
+
+                // Get the selected BookID and UserID from the combo boxes
+                String selectedBook = (String) bookCombo.getSelectedItem();
+                String selectedUser = (String) userCombo.getSelectedItem();
+
+                stmt.setString(1, selectedBook.split(" - ")[0]); // BookID from selected item
+                stmt.setString(2, selectedUser.split(" - ")[0]); // UserID from selected item
+                stmt.setString(3, borrowedDateField.getText());
+                stmt.setString(4, returnedDateField.getText());
+                stmt.setString(5, feeField.getText());
+                stmt.setString(6, borrowIdField.getText());
                 stmt.executeUpdate();
 
-                for (int i = 0; i < 6; i++) model.setValueAt(fields[i].getText(), row, i);
+                // Update the table model with the new values
+                model.setValueAt(selectedBook.split(" - ", 2)[1], row, 1); // book title
+                model.setValueAt(selectedUser.split(" - ", 2)[1], row, 2); // user name
+                model.setValueAt(borrowedDateField.getText(), row, 3);
+                model.setValueAt(returnedDateField.getText(), row, 4);
+                model.setValueAt(feeField.getText(), row, 5);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     }
+
+
+
+
 
     class ButtonRenderer extends JPanel implements TableCellRenderer {
         private final JButton editButton = new JButton("Edit");
@@ -364,14 +477,17 @@ public class Borrowed extends JFrame {
     }
 
     class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
-        private final JButton editButton = new JButton("Edit");
-        private final JButton deleteButton = new JButton("Del");
+        private JPanel panel;
+        private JButton editButton = new JButton("Edit");
+        private JButton deleteButton = new JButton("Del");
         private int currentRow;
 
         public ButtonEditor(JCheckBox checkBox) {
+            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
             panel.add(editButton);
             panel.add(deleteButton);
+            editButton.setFocusable(false);
+            deleteButton.setFocusable(false);
             editButton.setPreferredSize(new Dimension(55, 25));
             deleteButton.setPreferredSize(new Dimension(55, 25));
             editButton.setFont(new Font("Arial", Font.BOLD, 10));
@@ -384,12 +500,12 @@ public class Borrowed extends JFrame {
 
             deleteButton.addActionListener(e -> {
                 fireEditingStopped();
-                int confirm = JOptionPane.showConfirmDialog(Borrowed.this, "Are you sure to delete this borrow record?", "Confirm", JOptionPane.YES_NO_OPTION);
+                int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this record?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     try (Connection conn = DBConnection.getConnection()) {
-                        String id = model.getValueAt(currentRow, 0).toString();
-                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM borroweds WHERE borrowid = ?");
-                        stmt.setString(1, id);
+                        String sql = "DELETE FROM borroweds WHERE id=?";
+                        PreparedStatement stmt = conn.prepareStatement(sql);
+                        stmt.setInt(1, Integer.parseInt(model.getValueAt(currentRow, 0).toString()));
                         stmt.executeUpdate();
                         model.removeRow(currentRow);
                     } catch (Exception ex) {
@@ -399,33 +515,61 @@ public class Borrowed extends JFrame {
             });
         }
 
+        @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            currentRow = row;
+            this.currentRow = row;
             return panel;
         }
 
+        @Override
         public Object getCellEditorValue() {
-            return null;
+            return "";
         }
     }
 
+
     private void loadBorrowedsFromDatabase() {
+        model.setRowCount(0); // clear existing data
+
+        String sql = """
+        SELECT 
+            b.id AS borrowId,
+            bo.id AS bookId, 
+            bo.title AS bookTitle, 
+            u.id AS userId, 
+            u.name AS userName, 
+            b.borrowedDate, 
+            b.returnedDate, 
+            b.fee
+        FROM 
+            borroweds b
+        JOIN 
+            books bo ON b.bookId = bo.id
+        JOIN 
+            users u ON b.userId = u.id
+    """;
+
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT borrowid, bookid, userid, borroweddate, returndate, fee FROM borroweds")) {
+             ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                for (int i = 1; i <= 6; i++) {
-                    row.add(rs.getString(i));
-                }
+                row.add(rs.getInt("borrowId"));                   // ID (can still show ID here)
+                row.add(rs.getString("bookTitle"));               // Replaces bookId with title
+                row.add(rs.getString("userName"));                // Replaces userId with name
+                row.add(rs.getString("borrowedDate"));
+                row.add(rs.getString("returnedDate"));
+                row.add(rs.getString("fee"));
                 row.add("Actions");
                 model.addRow(row);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Borrowed().setVisible(true));
