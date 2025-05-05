@@ -396,7 +396,7 @@ public class Sales extends JFrame {
     private void loadSalesFromDatabase() {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT sales_id, staff_id, user_id, book_id, quantity, amount FROM sales")) {
+             ResultSet rs = stmt.executeQuery("SELECT id, staffid, customerid, bookid, qnty, amount FROM sales")) {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
