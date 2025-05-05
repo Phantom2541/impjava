@@ -424,20 +424,28 @@ public class Books extends JFrame {
     private void loadBooksFromDatabase() {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM books")) {
+             // Join the 'books' table with the 'publishers' table to get the publisher's name
+             ResultSet rs = stmt.executeQuery("SELECT b.id, b.title, b.author, p.name, b.copyright, b.lcn, b.section, b.isActive FROM books b JOIN publishers p ON b.publisherId = p.id")) {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                for (int i = 1; i <= 8; i++) {
-                    row.add(rs.getString(i));
+                for (int i = 1; i <= 7; i++) {
+                    row.add(rs.getString(i));  // Add columns from 'books' table
                 }
-                row.add("Actions");
+
+                // Hardcode the 'isActive' value as true
+                row.add(true);  // Always add true for isActive column
+
+                row.add("Actions");  // Add Actions column
                 model.addRow(row);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Books().setVisible(true));
