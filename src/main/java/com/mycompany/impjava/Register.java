@@ -323,49 +323,89 @@ public class Register extends javax.swing.JFrame {
     }//GEN-LAST:event_jPasswordField1ActionPerformed
 
     private void button1ActionPerformed(java.awt.event.ActionEvent evt) {
-        String name = jTextField2.getText();
-        String email = jTextField3.getText();
-        String dobString = jFormattedTextField2.getText(); // Expected: yyyy-MM-dd
+        String name = jTextField2.getText().trim();
+        String email = jTextField3.getText().trim();
+        String dobString = jFormattedTextField2.getText().trim(); // Expected: yyyy-MM-dd
         String password = new String(jPasswordField1.getPassword());
         String confirmPassword = new String(jPasswordField2.getPassword());
+
+        // Check for empty fields
+        if (name.isEmpty() || email.isEmpty() || dobString.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Please fill in all fields.");
+            return;
+        }
+
+        // Password validation
+        if (password.length() < 8 || password.length() > 10) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Password must be between 8 and 10 characters.");
+            return;
+        }
+
+        if (!password.matches(".*[A-Z].*")) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Password must contain at least one uppercase letter.");
+            return;
+        }
+
+        if (!password.matches(".*\\d.*")) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Password must contain at least one number.");
+            return;
+        }
 
         if (!password.equals(confirmPassword)) {
             javax.swing.JOptionPane.showMessageDialog(this, "Passwords do not match.");
             return;
         }
 
+        // Date of Birth validation
+        java.util.Date dob;
         try {
-            // Parse date string to java.sql.Date
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
-            java.util.Date utilDate = inputFormat.parse(dobString);
-            java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            sdf.setLenient(false); // strict parsing
+            dob = sdf.parse(dobString);
 
-            // JDBC connection
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = DBConnection.getConnection();
+            java.util.Calendar today = java.util.Calendar.getInstance();
 
-            String query = "INSERT INTO users (name, email, dob, password) VALUES (?, ?, ?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, name);
-            stmt.setString(2, email);
-            stmt.setDate(3, sqlDate); // pass formatted date
-            stmt.setString(4, password); // For real apps, hash this!
+            // Minimum age: 13
+            java.util.Calendar minAge = (java.util.Calendar) today.clone();
+            minAge.add(java.util.Calendar.YEAR, -13);
 
-            int rowsInserted = stmt.executeUpdate();
-            if (rowsInserted > 0) {
-                javax.swing.JOptionPane.showMessageDialog(this, "Registration successful!");
-                Login login = new Login();
-                login.setVisible(true);
-                login.pack();
-                login.setLocationRelativeTo(null);
-                login.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+            // Maximum age: 125
+            java.util.Calendar maxAge = (java.util.Calendar) today.clone();
+            maxAge.add(java.util.Calendar.YEAR, -125);
 
-                this.dispose();
+            if (dob.after(minAge.getTime())) {
+                javax.swing.JOptionPane.showMessageDialog(this, "You must be at least 13 years old.");
+                return;
             }
 
-            conn.close();
+            if (dob.before(maxAge.getTime())) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Age must be less than or equal to 125 years.");
+                return;
+            }
+
         } catch (Exception e) {
-            e.printStackTrace();
+            javax.swing.JOptionPane.showMessageDialog(this, "Invalid birthdate format. Use yyyy-MM-dd.");
+            return;
+        }
+
+        // Database insertion
+        try {
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/implibrary", "root", "");
+            String query = "INSERT INTO users (name, dob, email, password) VALUES (?, ?, ?, ?)";
+            PreparedStatement pst = con.prepareStatement(query);
+            pst.setString(1, name);
+            pst.setString(2, dobString);
+            pst.setString(3, email);
+            pst.setString(4, password);
+
+            pst.executeUpdate();
+            javax.swing.JOptionPane.showMessageDialog(this, "Registration successful!");
+
+            // Redirect to login
+            new Login().setVisible(true);
+            this.dispose();
+
+        } catch (Exception e) {
             javax.swing.JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
     }
