@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 28, 2025 at 06:23 AM
+-- Generation Time: May 12, 2025 at 02:29 AM
 -- Server version: 10.4.24-MariaDB
 -- PHP Version: 8.0.19
 
@@ -33,34 +33,13 @@ CREATE TABLE `books` (
   `author` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `publisherId` bigint(20) UNSIGNED NOT NULL,
   `copyright` int(11) NOT NULL,
-  `lcn` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `section` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `price` int(11) NOT NULL,
+  `isbn` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `genre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `qnty` int(11) NOT NULL,
   `isActive` tinyint(1) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `books`
---
-
-INSERT INTO `books` (`id`, `title`, `author`, `publisherId`, `copyright`, `lcn`, `section`, `price`, `isActive`, `created_at`, `updated_at`) VALUES
-(6, 'Database Systems', 'R. Elmasri', 6, 2020, 'QA76.9.D3 E45', 'Technology', 1250, 0, NULL, NULL),
-(7, 'Clean Code', 'Robert C. Martin', 11, 2008, 'QA76.76.M52 M37', 'Programming', 980, 0, NULL, NULL),
-(8, 'Computer Networks', 'A. Tanenbaum', 6, 2011, 'TK5105.5 T36', 'Networking', 1130, 0, NULL, NULL),
-(9, 'The Pragmatic Programmer', 'Andy Hunt', 7, 1999, 'QA76.6 H86', 'Software Eng', 1150, 0, NULL, NULL),
-(10, 'Operating Systems', 'W. Stallings', 6, 2018, 'QA76.76.O63 S73', 'Systems', 1350, 0, NULL, NULL),
-(11, 'Data Structures', 'S. Sahni', 12, 2015, 'QA76.73.J38 S34', 'Programming', 990, 0, NULL, NULL),
-(12, 'Artificial Intelligence', 'Stuart Russell', 6, 2021, 'Q335 R87', 'AI', 1580, 0, NULL, NULL),
-(13, 'Intro to Algorithms', 'Cormen et al.', 8, 2009, 'QA76.6 C662', 'Algorithms', 1450, 0, NULL, NULL),
-(14, 'Web Development', 'Jon Duckett', 13, 2014, 'TK5105.888 D83', 'Web Dev', 1200, 0, NULL, NULL),
-(15, 'UI Design Basics', 'Steve Krug', 14, 2013, 'TK5105.888 K78', 'Design', 890, 0, NULL, NULL),
-(16, 'Modern Java', 'Raoul-Gabriel Urma', 9, 2017, 'QA76.73.J38 U75', 'Programming', 1100, 0, NULL, NULL),
-(17, 'Python Crash Course', 'Eric Matthes', 10, 2019, 'QA76.73.P98 M38', 'Programming', 1050, 0, NULL, NULL),
-(18, 'Learning PHP', 'David Sklar', 9, 2016, 'QA76.73.P224 S55', 'Web Dev', 960, 0, NULL, NULL),
-(19, 'System Analysis', 'Kendall & Kendall', 6, 2014, 'QA76.9.S88 K46', 'IS', 980, 0, NULL, NULL),
-(20, 'Cybersecurity 101', 'Mark Stanislav', 13, 2020, 'TK5105.59 S73', 'Security', 1350, 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -72,33 +51,16 @@ CREATE TABLE `borroweds` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `bookId` bigint(20) UNSIGNED NOT NULL,
   `userId` bigint(20) UNSIGNED NOT NULL,
+  `approvedId` bigint(20) UNSIGNED NOT NULL,
+  `approvedDate` date NOT NULL,
   `borrowedDate` date NOT NULL,
   `returnedDate` date NOT NULL,
+  `status` enum('pending','approved','denied','returned') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
   `fee` int(11) NOT NULL,
+  `remarks` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `borroweds`
---
-
-INSERT INTO `borroweds` (`id`, `bookId`, `userId`, `borrowedDate`, `returnedDate`, `fee`, `created_at`, `updated_at`) VALUES
-(1, 6, 1, '2025-04-01', '2025-04-15', 0, NULL, NULL),
-(2, 7, 3, '2025-04-03', '2025-04-17', 0, NULL, NULL),
-(3, 8, 5, '2025-04-05', '2025-04-20', 0, NULL, NULL),
-(4, 9, 6, '2025-04-06', '2025-04-21', 0, NULL, NULL),
-(5, 10, 8, '2025-04-07', '2025-04-22', 0, NULL, NULL),
-(6, 11, 10, '2025-04-08', '2025-04-23', 0, NULL, NULL),
-(7, 12, 11, '2025-04-09', '2025-04-24', 0, NULL, NULL),
-(8, 13, 13, '2025-04-10', '2025-04-25', 0, NULL, NULL),
-(9, 14, 15, '2025-04-11', '2025-04-26', 0, NULL, NULL),
-(10, 15, 1, '2025-04-12', '2025-04-27', 0, NULL, NULL),
-(11, 16, 3, '2025-04-13', '2025-04-28', 0, NULL, NULL),
-(12, 17, 5, '2025-04-14', '2025-04-29', 0, NULL, NULL),
-(13, 18, 6, '2025-04-15', '2025-04-30', 0, NULL, NULL),
-(14, 19, 8, '2025-04-16', '2025-05-01', 0, NULL, NULL),
-(15, 20, 10, '2025-04-17', '2025-05-02', 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -189,27 +151,6 @@ CREATE TABLE `publishers` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `publishers`
---
-
-INSERT INTO `publishers` (`id`, `name`, `subName`, `Address`, `created_at`, `updated_at`) VALUES
-(6, 'Pearson', 'Global Education', 'London, UK', NULL, NULL),
-(7, 'Addison-Wesley', 'Professional', 'Boston, MA', NULL, NULL),
-(8, 'MIT Press', 'Academic', 'Cambridge, MA', NULL, NULL),
-(9, 'O’Reilly', 'Media Inc.', 'Sebastopol, CA', NULL, NULL),
-(10, 'No Starch Press', 'Tech Books', 'San Francisco, CA', NULL, NULL),
-(11, 'Prentice Hall', 'Education', 'New Jersey, USA', NULL, NULL),
-(12, 'Oxford Press', 'Oxford Publishing', 'Oxford, UK', NULL, NULL),
-(13, 'Wiley', 'Wiley Publications', 'Hoboken, NJ', NULL, NULL),
-(14, 'New Riders', 'Voices That Matter', 'Berkeley, CA', NULL, NULL),
-(15, 'McGraw-Hill', 'Education', 'New York, NY', NULL, NULL),
-(16, 'Cengage', 'Learning', 'Boston, MA', NULL, NULL),
-(17, 'Packt Publishing', 'Learning Ltd', 'Birmingham, UK', NULL, NULL),
-(18, 'Springer', 'Science+Business Media', 'Berlin, Germany', NULL, NULL),
-(19, 'CRC Press', 'Taylor & Francis', 'Boca Raton, FL', NULL, NULL),
-(20, 'Elsevier', 'Academic Publishing', 'Amsterdam, Netherlands', NULL, NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -227,42 +168,6 @@ CREATE TABLE `sales` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `sales`
---
-
-INSERT INTO `sales` (`id`, `staffId`, `customerId`, `bookId`, `qnty`, `amount`, `created_at`, `updated_at`) VALUES
-(61, 1, 1, 6, 1, 1250, NULL, NULL),
-(62, 2, 3, 7, 1, 980, NULL, NULL),
-(63, 3, 5, 8, 2, 2260, NULL, NULL),
-(64, 4, 6, 9, 1, 1150, NULL, NULL),
-(65, 5, 8, 10, 1, 1350, NULL, NULL),
-(66, 6, 10, 11, 3, 2970, NULL, NULL),
-(67, 1, 11, 12, 1, 1580, NULL, NULL),
-(68, 2, 13, 13, 2, 2900, NULL, NULL),
-(69, 3, 15, 14, 1, 1200, NULL, NULL),
-(70, 4, 1, 15, 1, 890, NULL, NULL),
-(71, 5, 3, 16, 1, 1100, NULL, NULL),
-(72, 6, 5, 17, 1, 1050, NULL, NULL),
-(73, 1, 6, 18, 1, 960, NULL, NULL),
-(74, 2, 8, 19, 2, 1960, NULL, NULL),
-(75, 3, 10, 20, 1, 1350, NULL, NULL),
-(76, 1, 1, 6, 1, 1250, NULL, NULL),
-(77, 2, 3, 7, 1, 980, NULL, NULL),
-(78, 3, 5, 8, 2, 2260, NULL, NULL),
-(79, 4, 6, 9, 1, 1150, NULL, NULL),
-(80, 5, 8, 10, 1, 1350, NULL, NULL),
-(81, 6, 10, 11, 3, 2970, NULL, NULL),
-(82, 1, 11, 12, 1, 1580, NULL, NULL),
-(83, 2, 13, 13, 2, 2900, NULL, NULL),
-(84, 3, 15, 14, 1, 1200, NULL, NULL),
-(85, 4, 1, 15, 1, 890, NULL, NULL),
-(86, 5, 3, 16, 1, 1100, NULL, NULL),
-(87, 6, 5, 17, 1, 1050, NULL, NULL),
-(88, 1, 6, 18, 1, 960, NULL, NULL),
-(89, 2, 8, 19, 2, 1960, NULL, NULL),
-(90, 3, 10, 20, 1, 1350, NULL, NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -276,27 +181,6 @@ CREATE TABLE `staffs` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `staffs`
---
-
-INSERT INTO `staffs` (`id`, `userId`, `position`, `created_at`, `updated_at`) VALUES
-(1, 2, 'Librarian', NULL, NULL),
-(2, 4, 'Sales Assistant', NULL, NULL),
-(3, 7, 'Archivist', NULL, NULL),
-(4, 9, 'Front Desk', NULL, NULL),
-(5, 12, 'Inventory Manager', NULL, NULL),
-(6, 14, 'Manager', NULL, NULL),
-(7, 2, 'Cataloger', NULL, NULL),
-(8, 4, 'Sales Clerk', NULL, NULL),
-(9, 7, 'Research Assistant', NULL, NULL),
-(10, 9, 'Data Analyst', NULL, NULL),
-(11, 12, 'Customer Service', NULL, NULL),
-(12, 14, 'Marketing Head', NULL, NULL),
-(13, 2, 'Operations', NULL, NULL),
-(14, 4, 'Assistant Librarian', NULL, NULL),
-(15, 7, 'Cashier', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -318,28 +202,6 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`id`, `name`, `role`, `email`, `dob`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'QuinnTimber', 'admin', 'quinntimber@gmail.com', '2005-12-24', NULL, '$2y$10$vrlz/LG21UJRdjtL76Jdlu4yHO.1VkOXprB14Bxv4BaWhT6WsV6vm', NULL, NULL, NULL),
-(2, 'Alice Santos', 'customer', 'alice@example.com', '2000-03-15', NULL, 'pass123', NULL, NULL, NULL),
-(3, 'Ben Cruz', 'staff', 'ben@example.com', '1995-08-21', NULL, 'pass123', NULL, NULL, NULL),
-(4, 'Clara Gomez', 'customer', 'clara@example.com', '2002-11-10', NULL, 'pass123', NULL, NULL, NULL),
-(5, 'David Lee', 'staff', 'david@example.com', '1990-04-30', NULL, 'pass123', NULL, NULL, NULL),
-(6, 'Ella Reyes', 'customer', 'ella@example.com', '2001-12-20', NULL, 'pass123', NULL, NULL, NULL),
-(7, 'Fred Navarro', 'customer', 'fred@example.com', '1999-07-14', NULL, 'pass123', NULL, NULL, NULL),
-(8, 'Grace Lim', 'staff', 'grace@example.com', '1988-09-05', NULL, 'pass123', NULL, NULL, NULL),
-(9, 'Hannah Sy', 'customer', 'hannah@example.com', '2003-06-22', NULL, 'pass123', NULL, NULL, NULL),
-(10, 'Ian dela Cruz', 'staff', 'ian@example.com', '1992-01-19', NULL, 'pass123', NULL, NULL, NULL),
-(11, 'Julia Tan', 'customer', 'julia@example.com', '2000-08-09', NULL, 'pass123', NULL, NULL, NULL),
-(12, 'Kyle Torres', 'customer', 'kyle@example.com', '1998-03-11', NULL, 'pass123', NULL, NULL, NULL),
-(13, 'Lara Cruz', 'staff', 'lara@example.com', '1997-10-13', NULL, 'pass123', NULL, NULL, NULL),
-(14, 'Marco Javier', 'customer', 'marco@example.com', '2004-02-27', NULL, 'pass123', NULL, NULL, NULL),
-(15, 'Nina Pascual', 'staff', 'nina@example.com', '1985-05-17', NULL, 'pass123', NULL, NULL, NULL),
-(16, 'Oscar Santos', 'customer', 'oscar@example.com', '2000-07-25', NULL, 'pass123', NULL, NULL, NULL);
-
---
 -- Indexes for dumped tables
 --
 
@@ -356,7 +218,8 @@ ALTER TABLE `books`
 ALTER TABLE `borroweds`
   ADD PRIMARY KEY (`id`),
   ADD KEY `borroweds_bookid_foreign` (`bookId`),
-  ADD KEY `borroweds_userid_foreign` (`userId`);
+  ADD KEY `borroweds_userid_foreign` (`userId`),
+  ADD KEY `borroweds_approvedid_foreign` (`approvedId`);
 
 --
 -- Indexes for table `failed_jobs`
@@ -422,13 +285,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `books`
 --
 ALTER TABLE `books`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `borroweds`
 --
 ALTER TABLE `borroweds`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -452,25 +315,25 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `publishers`
 --
 ALTER TABLE `publishers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `staffs`
 --
 ALTER TABLE `staffs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
@@ -486,6 +349,7 @@ ALTER TABLE `books`
 -- Constraints for table `borroweds`
 --
 ALTER TABLE `borroweds`
+  ADD CONSTRAINT `borroweds_approvedid_foreign` FOREIGN KEY (`approvedId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `borroweds_bookid_foreign` FOREIGN KEY (`bookId`) REFERENCES `books` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `borroweds_userid_foreign` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
