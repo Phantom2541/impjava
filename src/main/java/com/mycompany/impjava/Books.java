@@ -17,6 +17,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.AbstractCellEditor;
@@ -25,6 +27,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -36,6 +39,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+import java.awt.Color;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class Books extends JFrame {
     private JPanel sidebar, contentArea;
@@ -295,62 +301,181 @@ public class Books extends JFrame {
     }
 
     private void openAddBookDialog(DefaultTableModel model) {
-        JTextField[] fields = new JTextField[8];
-        String[] labels = {"ID", "Title", "Author", "Publisher", "Copyright", "LCN", "Section", "Is Active"};
-        JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-
-        for (int i = 0; i < labels.length; i++) {
-            inputPanel.add(new JLabel(labels[i] + ":"));
-            fields[i] = new JTextField();
-            inputPanel.add(fields[i]);
-        }
-
-        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Book", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            try (Connection conn = DBConnection.getConnection()) {
-                String sql = "INSERT INTO books (id, title, author, publisher, copyright, lcn, section, isactive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                for (int i = 0; i < 8; i++) {
-                    stmt.setString(i + 1, fields[i].getText());
-                }
-                stmt.executeUpdate();
-
-                Object[] row = new Object[9];
-                for (int i = 0; i < 8; i++) row[i] = fields[i].getText();
-                row[8] = "Actions";
-                model.addRow(row);
-            } catch (Exception ex) {
-                ex.printStackTrace();
+        try (Connection conn = DBConnection.getConnection()) {
+            // Load publishers into a map
+            Map<String, String> publisherMap = new LinkedHashMap<>();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT id, name FROM publishers");
+            while (rs.next()) {
+                publisherMap.put(rs.getString("name"), rs.getString("id"));
             }
+
+            // UI Components
+            JTextField titleField = new JTextField();
+            JTextField authorField = new JTextField();
+            JComboBox<String> publisherBox = new JComboBox<>(publisherMap.keySet().toArray(new String[0]));
+            JTextField copyrightField = new JTextField();
+            JTextField lcnField = new JTextField();
+            JTextField sectionField = new JTextField();
+            JComboBox<String> isActiveBox = new JComboBox<>(new String[]{"true", "false"});
+
+            // Validation
+            copyrightField.addKeyListener(new KeyAdapter() {
+                public void keyReleased(KeyEvent e) {
+                    String text = copyrightField.getText();
+                    copyrightField.setBackground(text.matches("\\d*") ? Color.WHITE : Color.PINK);
+                }
+            });
+
+            // Layout
+            JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+            inputPanel.add(new JLabel("Title:")); inputPanel.add(titleField);
+            inputPanel.add(new JLabel("Author:")); inputPanel.add(authorField);
+            inputPanel.add(new JLabel("Publisher:")); inputPanel.add(publisherBox);
+            inputPanel.add(new JLabel("Copyright Year:")); inputPanel.add(copyrightField);
+            inputPanel.add(new JLabel("Library of Congress Number:")); inputPanel.add(lcnField);
+            inputPanel.add(new JLabel("Section:")); inputPanel.add(sectionField);
+            inputPanel.add(new JLabel("Is Active:")); inputPanel.add(isActiveBox);
+
+            while (true) {
+                int option = JOptionPane.showConfirmDialog(null, inputPanel, "Add Book", JOptionPane.OK_CANCEL_OPTION);
+                if (option != JOptionPane.OK_OPTION) return;
+
+                // Get input values
+                String title = titleField.getText().trim();
+                String author = authorField.getText().trim();
+                String copyright = copyrightField.getText().trim();
+                String lcn = lcnField.getText().trim();
+                String section = sectionField.getText().trim();
+                String publisherId = publisherMap.get((String) publisherBox.getSelectedItem());
+                String isActive = isActiveBox.getSelectedItem().equals("true") ? "1" : "0";
+
+                // Validate inputs
+                if (title.isEmpty() || author.isEmpty() || copyright.isEmpty() ||
+                        lcn.isEmpty() || section.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "All fields must be filled.");
+                    continue;
+                }
+
+                if (!copyright.matches("\\d+")) {
+                    JOptionPane.showMessageDialog(null, "Copyright must be numeric.");
+                    continue;
+                }
+
+                // Insert into DB
+                String sql = "INSERT INTO books (title, author, publisherId, copyright, lcn, section, isActive) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement stmtInsert = conn.prepareStatement(sql);
+                stmtInsert.setString(1, title);
+                stmtInsert.setString(2, author);
+                stmtInsert.setString(3, publisherId);
+                stmtInsert.setString(4, copyright);
+                stmtInsert.setString(5, lcn);
+                stmtInsert.setString(6, section);
+                stmtInsert.setString(7, isActive);
+                stmtInsert.executeUpdate();
+
+                // Add to table model
+                model.addRow(new Object[]{
+                        "", title, author, publisherBox.getSelectedItem(), copyright,
+                        lcn, section, isActiveBox.getSelectedItem(), "Actions"
+                });
+
+                break;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Failed to add book: " + ex.getMessage());
         }
     }
 
     private void openEditDialog(int row) {
-        JTextField[] fields = new JTextField[8];
-        String[] labels = {"ID", "Title", "Author", "Publisher", "Copyright", "LCN", "Section", "Is Active"};
-        JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-
-        for (int i = 0; i < labels.length; i++) {
-            inputPanel.add(new JLabel(labels[i] + ":"));
-            fields[i] = new JTextField(model.getValueAt(row, i).toString());
-            inputPanel.add(fields[i]);
-        }
-
-        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Book", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            try (Connection conn = DBConnection.getConnection()) {
-                String sql = "UPDATE books SET title=?, author=?, publisher=?, copyright=?, lcn=?, section=?, isactive=? WHERE id=?";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                for (int i = 1; i < 8; i++) {
-                    stmt.setString(i, fields[i].getText());
-                }
-                stmt.setString(8, fields[0].getText());
-                stmt.executeUpdate();
-
-                for (int i = 0; i < 8; i++) model.setValueAt(fields[i].getText(), row, i);
-            } catch (Exception ex) {
-                ex.printStackTrace();
+        try (Connection conn = DBConnection.getConnection()) {
+            // Load publishers
+            Map<String, String> publisherMap = new LinkedHashMap<>();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT id, name FROM publishers");
+            while (rs.next()) {
+                publisherMap.put(rs.getString("name"), rs.getString("id"));
             }
+
+            // UI Components
+            JTextField idField = new JTextField(model.getValueAt(row, 0).toString());
+            idField.setEditable(false);
+            JTextField titleField = new JTextField(model.getValueAt(row, 1).toString());
+            JTextField authorField = new JTextField(model.getValueAt(row, 2).toString());
+            JComboBox<String> publisherBox = new JComboBox<>(publisherMap.keySet().toArray(new String[0]));
+            JTextField copyrightField = new JTextField(model.getValueAt(row, 4).toString());
+            JTextField lcnField = new JTextField(model.getValueAt(row, 5).toString());
+            JTextField sectionField = new JTextField(model.getValueAt(row, 6).toString());
+            JComboBox<String> isActiveBox = new JComboBox<>(new String[] { "true", "false" });
+            isActiveBox.setSelectedItem(model.getValueAt(row, 7).toString());
+
+            // Set current publisher
+            String currentPublisherName = model.getValueAt(row, 3).toString();
+            publisherBox.setSelectedItem(currentPublisherName);
+
+            // Validation for numeric fields
+            KeyAdapter numericValidator = new KeyAdapter() {
+                public void keyReleased(KeyEvent e) {
+                    JTextField src = (JTextField) e.getSource();
+                    src.setBackground(src.getText().matches("\\d*") ? Color.WHITE : Color.PINK);
+                }
+            };
+            copyrightField.addKeyListener(numericValidator);
+            lcnField.addKeyListener(numericValidator);
+
+            // Build panel
+            JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+            inputPanel.add(new JLabel("ID:")); inputPanel.add(idField);
+            inputPanel.add(new JLabel("Title:")); inputPanel.add(titleField);
+            inputPanel.add(new JLabel("Author:")); inputPanel.add(authorField);
+            inputPanel.add(new JLabel("Publisher:")); inputPanel.add(publisherBox);
+            inputPanel.add(new JLabel("Copyright:")); inputPanel.add(copyrightField);
+            inputPanel.add(new JLabel("LCN:")); inputPanel.add(lcnField);
+            inputPanel.add(new JLabel("Section:")); inputPanel.add(sectionField);
+            inputPanel.add(new JLabel("Is Active:")); inputPanel.add(isActiveBox);
+
+            int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Book", JOptionPane.OK_CANCEL_OPTION);
+            if (option != JOptionPane.OK_OPTION) return;
+
+            // Validate inputs
+            if (titleField.getText().trim().isEmpty() || authorField.getText().trim().isEmpty()
+                    || copyrightField.getText().trim().isEmpty() || lcnField.getText().trim().isEmpty()
+                    || sectionField.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "All fields must be filled.");
+                return;
+            }
+
+            if (!copyrightField.getText().trim().matches("\\d+")) {
+                JOptionPane.showMessageDialog(this, "Copyright must be numeric.");
+                return;
+            }
+
+            // Update DB
+            String sql = "UPDATE books SET title=?, author=?, publisherId=?, copyright=?, lcn=?, section=?, isActive=? WHERE id=?";
+            PreparedStatement stmtUpdate = conn.prepareStatement(sql);
+            stmtUpdate.setString(1, titleField.getText().trim());
+            stmtUpdate.setString(2, authorField.getText().trim());
+            stmtUpdate.setString(3, publisherMap.get(publisherBox.getSelectedItem()));
+            stmtUpdate.setString(4, copyrightField.getText().trim());
+            stmtUpdate.setString(5, lcnField.getText().trim());
+            stmtUpdate.setString(6, sectionField.getText().trim());
+            stmtUpdate.setString(7, isActiveBox.getSelectedItem().equals("true") ? "1" : "0");
+            stmtUpdate.setString(8, idField.getText().trim());
+            stmtUpdate.executeUpdate();
+
+            // Update table model
+            model.setValueAt(idField.getText(), row, 0);
+            model.setValueAt(titleField.getText(), row, 1);
+            model.setValueAt(authorField.getText(), row, 2);
+            model.setValueAt(publisherBox.getSelectedItem(), row, 3);
+            model.setValueAt(copyrightField.getText(), row, 4);
+            model.setValueAt(lcnField.getText(), row, 5);
+            model.setValueAt(sectionField.getText(), row, 6);
+            model.setValueAt(isActiveBox.getSelectedItem(), row, 7);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error while editing book: " + ex.getMessage());
         }
     }
 
@@ -444,23 +569,7 @@ public class Books extends JFrame {
         }
     }
 
-
-
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Books().setVisible(true));
     }
 }
-
-//class DBConnection {
-//    public static Connection getConnection() {
-//        try {
-//            Class.forName("com.mysql.cj.jdbc.Driver");
-//            return DriverManager.getConnection("jdbc:mysql://localhost:3306/implibrary", "root", "");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            JOptionPane.showMessageDialog(null, "Failed to connect to database.");
-//            return null;
-//        }
-//    }
-//}
