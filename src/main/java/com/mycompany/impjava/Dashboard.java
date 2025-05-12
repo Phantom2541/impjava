@@ -245,7 +245,7 @@ public class Dashboard extends JFrame {
     private JPanel createHomePanel() {
         JPanel panel = new JPanel();
         panel.setBackground(Color.WHITE);
-        panel.add(new JLabel("This is the Home Page"));
+        panel.add(new JLabel("We strive to satisfy our users and ask for nothing in return"));
         return panel;
     }
 

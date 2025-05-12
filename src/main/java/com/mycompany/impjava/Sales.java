@@ -176,7 +176,7 @@ public class Sales extends JFrame {
             target.setExtendedState(JFrame.MAXIMIZED_BOTH);
             target.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             this.dispose();
-        }
+        }e
     }
 
     private void toggleSidebar() {
