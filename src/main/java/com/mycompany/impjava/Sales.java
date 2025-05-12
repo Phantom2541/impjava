@@ -165,8 +165,12 @@ public class Sales extends JFrame {
             case "Publishers" -> new Publisher();
             case "Logout" -> {
                 int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) yield new Login();
-                else yield null;
+                if (confirm == JOptionPane.YES_OPTION) {
+                    yield new Login();
+                }
+                else {
+                    yield null;
+                }
             }
             default -> null;
         };
@@ -176,7 +180,7 @@ public class Sales extends JFrame {
             target.setExtendedState(JFrame.MAXIMIZED_BOTH);
             target.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             this.dispose();
-        }e
+        }
     }
 
     private void toggleSidebar() {
