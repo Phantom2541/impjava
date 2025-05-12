@@ -1,23 +1,8 @@
 package com.mycompany.impjava;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Vector;
+<<<<<<< Updated upstream
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -38,6 +23,12 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.util.Map;
 import java.util.LinkedHashMap;
+=======
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.table.*;
+>>>>>>> Stashed changes
 
 public class Staffs extends JFrame {
     private JPanel sidebar, contentArea;
@@ -108,7 +99,11 @@ public class Staffs extends JFrame {
 
         contentArea.add(topBar, BorderLayout.NORTH);
 
+<<<<<<< Updated upstream
         String[] columnNames = {"ID", "Name", "Position", "ACTIONS"};
+=======
+        String[] columnNames = {"id", "username", "position", "ACTIONS"};
+>>>>>>> Stashed changes
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model) {
             public boolean isCellEditable(int row, int column) {
@@ -117,10 +112,17 @@ public class Staffs extends JFrame {
         };
 
         table.setRowHeight(40);
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(240, 240, 240));
+                return c;
+            }
+        });
+
         table.getTableHeader().setBackground(new Color(80, 30, 120));
         table.getTableHeader().setForeground(Color.WHITE);
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
-
         table.getColumn("ACTIONS").setCellRenderer(new ButtonRenderer());
         table.getColumn("ACTIONS").setCellEditor(new ButtonEditor(new JCheckBox()));
 
@@ -129,12 +131,12 @@ public class Staffs extends JFrame {
         tablePanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
         contentArea.add(tablePanel, BorderLayout.CENTER);
-        add(contentArea, BorderLayout.CENTER);
 
+        add(contentArea, BorderLayout.CENTER);
         loadStaffsFromDatabase();
     }
 
-     private JPanel createSidebar() {
+    private JPanel createSidebar() {
         JPanel panel = new JPanel() {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -155,16 +157,12 @@ public class Staffs extends JFrame {
         menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
-        panel.add(createSidebarButton("Home"));
-        panel.add(createSidebarButton("Books"));
-        panel.add(createSidebarButton("Users"));
-        panel.add(createSidebarButton("Staffs"));
-        panel.add(createSidebarButton("Sales"));
-        panel.add(createSidebarButton("Borrows"));
-        panel.add(createSidebarButton("Publishers"));
-        panel.add(Box.createVerticalGlue());
-        panel.add(createSidebarButton("Logout"));
+        String[] buttons = {"Home", "Books", "Users", "Staffs", "Sales", "Borrows", "Publishers", "Logout"};
+        for (String label : buttons) {
+            panel.add(createSidebarButton(label));
+        }
 
+        panel.add(Box.createVerticalGlue());
         return panel;
     }
 
@@ -193,82 +191,25 @@ public class Staffs extends JFrame {
         button.addActionListener(e -> handleNavigation(text));
         return button;
     }
-    
+
     private void handleNavigation(String page) {
         switch (page) {
-            case "Home":
-                Dashboard dashboard = new Dashboard();
-                dashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                dashboard.setLocationRelativeTo(null);
-                dashboard.setVisible(true); 
-                dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-                break;
-
-            case "Books":
-                Books books = new Books();
-                books.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                books.setLocationRelativeTo(null);
-                books.setVisible(true); 
-                books.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-            break;
-
-            case "Users":
-                Users users = new Users();
-                users.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                users.setLocationRelativeTo(null);
-                users.setVisible(true); 
-                users.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-            break;
-
-            case "Staffs":
-              //already on staff side ewe
-            break;
-
-            case "Sales":
-                Sales sales = new Sales();
-                sales.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                sales.setLocationRelativeTo(null);
-                sales.setVisible(true); 
-                sales.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-            break;
-
-            case "Borrows":
-                Borrowed borrowed= new Borrowed();
-                borrowed.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                borrowed.setLocationRelativeTo(null);
-                borrowed.setVisible(true); 
-                borrowed.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-            break;
-
-            case "Publishers":
-            Publisher publisher= new Publisher();
-            publisher.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            publisher.setLocationRelativeTo(null);
-            publisher.setVisible(true); 
-            publisher.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            this.dispose();
-            break;
-
+            case "Home": new Dashboard().setVisible(true); break;
+            case "Books": new Books().setVisible(true); break;
+            case "Users": new Users().setVisible(true); break;
+            case "Sales": new Sales().setVisible(true); break;
+            case "Borrows": new Borrowed().setVisible(true); break;
+            case "Publishers": new Publisher().setVisible(true); break;
             case "Logout":
                 int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    Login login = new Login();
-                    login.setVisible(true);
-                    login.pack();
-                    login.setLocationRelativeTo(null);
-                    login.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+                    new Login().setVisible(true);
                     this.dispose();
                 }
-                break;
+                return;
+            case "Staffs": break;
         }
-
-        contentArea.revalidate();
-        contentArea.repaint();
+        this.dispose();
     }
 
     private void toggleSidebar() {
@@ -279,6 +220,7 @@ public class Staffs extends JFrame {
     }
 
     private void openAddDialog() {
+<<<<<<< Updated upstream
         try (Connection conn = DBConnection.getConnection()) {
             // Load users into a map
             Map<String, String> userMap = new LinkedHashMap<>();
@@ -318,6 +260,55 @@ public class Staffs extends JFrame {
                 row.add(positionField.getText());
                 row.add("Actions");
                 model.addRow(row);
+=======
+        JTextField idField = new JTextField();
+        JTextField usernameField = new JTextField();
+        JTextField positionField = new JTextField();
+
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+        panel.add(new JLabel("id:"));
+        panel.add(idField);
+        panel.add(new JLabel("username:"));
+        panel.add(usernameField);
+        panel.add(new JLabel("position:"));
+        panel.add(positionField);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Add New Staff", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            String id = idField.getText().trim();
+            String username = usernameField.getText().trim();
+            String position = positionField.getText().trim();
+
+            if (id.isEmpty() || username.isEmpty() || position.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "All fields are required!", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try (Connection conn = DBConnection.getConnection()) {
+                String sql = "INSERT INTO staffs (id, username, position) VALUES (?, ?, ?)";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, id);
+                stmt.setString(2, username);
+                stmt.setString(3, position);
+                int rows = stmt.executeUpdate();
+
+                if (rows > 0) {
+                    Vector<Object> newRow = new Vector<>();
+                    newRow.add(id);
+                    newRow.add(username);
+                    newRow.add(position);
+                    newRow.add("Actions");
+                    model.addRow(newRow);
+                    JOptionPane.showMessageDialog(this, "Staff added successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Staff not added. Please check input values.");
+                }
+            } catch (SQLIntegrityConstraintViolationException ex) {
+                JOptionPane.showMessageDialog(this, "Duplicate ID or invalid Username. Please check constraints.", "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+>>>>>>> Stashed changes
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -325,6 +316,7 @@ public class Staffs extends JFrame {
     }
 
     private void openEditDialog(int row) {
+<<<<<<< Updated upstream
         try (Connection conn = DBConnection.getConnection()) {
             // Load users
             Map<String, String> userMap = new LinkedHashMap<>();
@@ -332,6 +324,31 @@ public class Staffs extends JFrame {
             ResultSet rs = stmt.executeQuery("SELECT id, name FROM users");
             while (rs.next()) {
                 userMap.put(rs.getString("name"), rs.getString("id"));
+=======
+        JTextField[] fields = new JTextField[3];
+        String[] labels = {"id", "username", "position"};
+        JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+
+        for (int i = 0; i < labels.length; i++) {
+            inputPanel.add(new JLabel(labels[i] + ":"));
+            fields[i] = new JTextField(model.getValueAt(row, i).toString());
+            inputPanel.add(fields[i]);
+        }
+
+        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Staff", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            try (Connection conn = DBConnection.getConnection()) {
+                String sql = "UPDATE staffs SET username=?, position=? WHERE id=?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, fields[1].getText());
+                stmt.setString(2, fields[2].getText());
+                stmt.setString(3, fields[0].getText());
+                stmt.executeUpdate();
+
+                for (int i = 0; i < 3; i++) model.setValueAt(fields[i].getText(), row, i);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+>>>>>>> Stashed changes
             }
 
             // Prepare form
@@ -411,7 +428,7 @@ public class Staffs extends JFrame {
                 if (confirm == JOptionPane.YES_OPTION) {
                     try (Connection conn = DBConnection.getConnection()) {
                         String id = model.getValueAt(currentRow, 0).toString();
-                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM staffs WHERE staff_id = ?");
+                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM staffs WHERE id = ?");
                         stmt.setString(1, id);
                         stmt.executeUpdate();
                         model.removeRow(currentRow);
@@ -422,32 +439,39 @@ public class Staffs extends JFrame {
             });
         }
 
+        @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             currentRow = row;
             return panel;
         }
 
+        @Override
         public Object getCellEditorValue() {
             return null;
         }
     }
 
     private void loadStaffsFromDatabase() {
+        model.setRowCount(0); // Clear table first
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
+<<<<<<< Updated upstream
              ResultSet rs = stmt.executeQuery("""
                                                   SELECT s.id, u.name, s.position FROM staffs s JOIN users u ON s.userId = u.id
                                               """)) {
 
+=======
+             ResultSet rs = stmt.executeQuery("SELECT id, username, position FROM staffs")) {
+>>>>>>> Stashed changes
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                for (int i = 1; i <= 3; i++) {
-                    row.add(rs.getString(i));
-                }
+                row.add(rs.getString("id"));
+                row.add(rs.getString("username"));
+                row.add(rs.getString("position"));
                 row.add("Actions");
                 model.addRow(row);
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
