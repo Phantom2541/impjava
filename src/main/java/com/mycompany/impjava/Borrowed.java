@@ -206,7 +206,7 @@ public class Borrowed extends JFrame {
                 books.setVisible(true);
                 books.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-            break;
+                break;
 
             case "Users":
                 Users users = new Users();
@@ -215,7 +215,7 @@ public class Borrowed extends JFrame {
                 users.setVisible(true);
                 users.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-            break;
+                break;
 
             case "Staffs":
                 Staffs staffs = new Staffs();
@@ -224,7 +224,7 @@ public class Borrowed extends JFrame {
                 staffs.setVisible(true);
                 staffs.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-            break;
+                break;
 
             case "Sales":
                 Sales sales = new Sales();
@@ -233,20 +233,20 @@ public class Borrowed extends JFrame {
                 sales.setVisible(true);
                 sales.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-            break;
+                break;
 
             case "Borrows":
-              //already on borrow side ewe
-            break;
+                //already on borrow side ewe
+                break;
 
             case "Publishers":
-            Publisher publisher= new Publisher();
-            publisher.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            publisher.setLocationRelativeTo(null);
-            publisher.setVisible(true);
-            publisher.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            this.dispose();
-            break;
+                Publisher publisher= new Publisher();
+                publisher.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                publisher.setLocationRelativeTo(null);
+                publisher.setVisible(true);
+                publisher.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
+                break;
 
             case "Logout":
                 int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
@@ -273,39 +273,12 @@ public class Borrowed extends JFrame {
 
 
     private void openAddBookDialog(DefaultTableModel model) {
-        JComboBox<String> bookComboBox = new JComboBox<>();
-        JComboBox<String> userComboBox = new JComboBox<>();
+        JComboBox<String> bookComboBox = new JComboBox<>(getActiveBooks());
+        JComboBox<String> userComboBox = new JComboBox<>(getUsers());
         JTextField borrowedDateField = new JTextField(LocalDate.now().toString());
         borrowedDateField.setEditable(false);
         JTextField returnedDateField = new JTextField();
         JTextField feeField = new JTextField();
-
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT id, title FROM books")) {
-
-            while (rs.next()) {
-                String id = rs.getString("id");
-                String title = rs.getString("title");
-                bookComboBox.addItem(id + " - " + title);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             // Only select books where status is 'active'
-             ResultSet rs = stmt.executeQuery("SELECT id, title FROM books WHERE isActive == '1'")) {
-
-            while (rs.next()) {
-                String id = rs.getString("id");
-                String title = rs.getString("title");
-                bookComboBox.addItem(id + " - " + title);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
 
         JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
         inputPanel.add(new JLabel("Book:"));
@@ -344,6 +317,8 @@ public class Borrowed extends JFrame {
 
                     String selectedBook = bookComboBox.getSelectedItem().toString().split(" - ")[0];
                     String selectedUser = userComboBox.getSelectedItem().toString().split(" - ")[0];
+                    String selectedBookName = bookComboBox.getSelectedItem().toString().split(" - ", 2)[1];
+                    String selectedUserName = userComboBox.getSelectedItem().toString().split(" - ", 2)[1];
 
                     stmt.setString(1, selectedBook);
                     stmt.setString(2, selectedUser);
@@ -356,8 +331,8 @@ public class Borrowed extends JFrame {
                     if (rs.next()) {
                         Object[] row = new Object[7];
                         row[0] = rs.getInt(1);
-                        row[1] = bookComboBox.getSelectedItem().toString().split(" - ", 2)[1];
-                        row[2] = userComboBox.getSelectedItem().toString().split(" - ", 2)[1];
+                        row[1] = selectedBookName;
+                        row[2] = selectedUserName;
                         row[3] = borrowedDateField.getText();
                         row[4] = returnedDateField.getText();
                         row[5] = feeField.getText();
@@ -409,6 +384,24 @@ public class Borrowed extends JFrame {
         return books.toArray(new String[0]);
     }
 
+    // Helper for only active books
+    private String[] getActiveBooks() {
+        List<String> books = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection()) {
+            String sql = "SELECT id, title FROM books WHERE isActive = '1'";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String title = rs.getString("title");
+                books.add(id + " - " + title);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return books.toArray(new String[0]);
+    }
+
     private void openEditDialog(int row) {
         JTextField borrowIdField = new JTextField(model.getValueAt(row, 0).toString());
         borrowIdField.setEditable(false);
@@ -416,8 +409,23 @@ public class Borrowed extends JFrame {
         JComboBox<String> bookCombo = new JComboBox<>(getBooks());
         JComboBox<String> userCombo = new JComboBox<>(getUsers());
 
-        bookCombo.setSelectedItem(model.getValueAt(row, 1).toString());
-        userCombo.setSelectedItem(model.getValueAt(row, 2).toString());
+        // Set selected item by matching displayed value
+        String currentBook = model.getValueAt(row, 1).toString();
+        String currentUser = model.getValueAt(row, 2).toString();
+        for (int i = 0; i < bookCombo.getItemCount(); i++) {
+            String val = bookCombo.getItemAt(i);
+            if (val.split(" - ", 2)[1].equals(currentBook)) {
+                bookCombo.setSelectedIndex(i);
+                break;
+            }
+        }
+        for (int i = 0; i < userCombo.getItemCount(); i++) {
+            String val = userCombo.getItemAt(i);
+            if (val.split(" - ", 2)[1].equals(currentUser)) {
+                userCombo.setSelectedIndex(i);
+                break;
+            }
+        }
 
         JTextField borrowedDateField = new JTextField(model.getValueAt(row, 3).toString());
         borrowedDateField.setEditable(false); // Make borrowed date uneditable
@@ -464,6 +472,8 @@ public class Borrowed extends JFrame {
 
                     String selectedBook = (String) bookCombo.getSelectedItem();
                     String selectedUser = (String) userCombo.getSelectedItem();
+                    String selectedBookName = selectedBook.split(" - ", 2)[1];
+                    String selectedUserName = selectedUser.split(" - ", 2)[1];
 
                     stmt.setString(1, selectedBook.split(" - ")[0]);
                     stmt.setString(2, selectedUser.split(" - ")[0]);
@@ -474,8 +484,8 @@ public class Borrowed extends JFrame {
                     stmt.executeUpdate();
 
                     // Update model
-                    model.setValueAt(selectedBook.split(" - ", 2)[1], row, 1);
-                    model.setValueAt(selectedUser.split(" - ", 2)[1], row, 2);
+                    model.setValueAt(selectedBookName, row, 1);
+                    model.setValueAt(selectedUserName, row, 2);
                     model.setValueAt(borrowedDateField.getText(), row, 3);
                     model.setValueAt(returnedDateField.getText(), row, 4);
                     model.setValueAt(feeField.getText(), row, 5);

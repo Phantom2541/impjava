@@ -1,39 +1,13 @@
 package com.mycompany.impjava;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.MediaTracker;
-import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import javax.swing.*;
+import javax.swing.table.*;
 
 public class stuSearchBook extends JFrame {
     private boolean isSidebarVisible = true;
@@ -55,7 +29,7 @@ public class stuSearchBook extends JFrame {
         mainPanel = new JPanel(new GridBagLayout());
 
         JPanel topPanel = new JPanel();
-        genreComboBox = new JComboBox<>(new String[]{"All", "Horror", "Romance", "Action", "Sci-Fi","Adventure"});
+        genreComboBox = new JComboBox<>();
         genreComboBox.setFont(new Font("SansSerif", Font.BOLD, 16));
         genreComboBox.setPreferredSize(new Dimension(200, 30));
         genreComboBox.addActionListener(e -> filterGenrePanels());
@@ -77,38 +51,8 @@ public class stuSearchBook extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1;
 
-        //-------------------------------------------This PArt is the tables---------------------------------------------------------
+        loadGenresAndBooksFromDB(gbc);
 
-        addGenrePanel("Horror", new String[][]{
-            {"1", "Dracula", "9780141439846", "1897", "Bram Stoker", "Penguin"},
-            {"2", "The Shining", "9780307743657", "1977", "Stephen King", "Anchor"},
-            {"3", "fish", "9781501134534", "1986", "Stephen King", "Scriwerr"},
-            {"23", "www", "9781523442970", "1453", "Stephen Keng", "Scrwww"},
-            {"28", "lol", "9781234323470", "2353", "Stephen Kong", "Scriee33r"},
-            {"12", "gyatt", "9781507464645", "3462", "Stephen Kung", "Scrwerer"},
-        }, gbc);
-        
-        addGenrePanel("Romance", new String[][]{
-            {"4", "Pride and Prejudice", "9780141040349", "1813", "Jane Austen", "Penguin"},
-            {"5", "The Notebook", "9780446605236", "1996", "Nicholas Sparks", "Warner Books"},
-            {"6", "Me Before You", "9780143124542", "2012", "Jojo Moyes", "Penguin"},
-        }, gbc);
-        
-        addGenrePanel("Action", new String[][]{
-            {"7", "Die Hard", "9781328745486", "1988", "Roderick Thorp", "Bonanza"},
-            {"8", "Mad Max", "9780451454186", "1979", "Terry Hayes", "Futura"},
-        }, gbc);
-        
-        addGenrePanel("Sci-Fi", new String[][]{
-            {"9", "Dune", "9780441013593", "1965", "Frank Herbert", "Ace"},
-            {"10", "Ender's Game", "9780812550702", "1985", "Orson Scott Card", "Tor Books"},
-        }, gbc);
-        
-        addGenrePanel("Adventure", new String[][]{
-            {"11", "Journey to the Center of the Earth", "9780451532150", "1864", "Jules Verne", "Signet Classics"},
-            {"12", "The Hobbit", "9780547928227", "1937", "J.R.R. Tolkien", "Mariner"},
-        }, gbc);
-        
         gbc.weighty = 1;
         mainPanel.add(Box.createVerticalGlue(), gbc);
 
@@ -117,16 +61,71 @@ public class stuSearchBook extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void addGenrePanel(String genre, String[][] data, GridBagConstraints gbc) {
-        JPanel panel = createCollapsiblePanel(genre, data);
-        genrePanels.put(genre, panel);
-        mainPanel.add(panel, gbc);
+    private void loadGenresAndBooksFromDB(GridBagConstraints gbc) {
+        java.util.List<String> genreList = new ArrayList<>();
+        genreList.add("All");
+
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT DISTINCT genre FROM books")) {
+
+            while (rs.next()) {
+                String genre = rs.getString("genre");
+                genreList.add(genre);
+                addGenrePanelFromDB(genre, gbc);
+            }
+
+            genreComboBox.setModel(new DefaultComboBoxModel<>(genreList.toArray(new String[0])));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to load genres.", "DB Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void addGenrePanelFromDB(String genre, GridBagConstraints gbc) {
+        String query = "SELECT b.id, b.title, b.author, p.name AS publisher_name, b.copyright, b.isbn, b.genre\n" +
+                "FROM books b\n" +
+                "JOIN publishers p ON b.publisherid = p.id\n" +
+                "WHERE b.genre = ?\n";
+        java.util.List<String[]> bookRows = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, genre);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    bookRows.add(new String[]{
+                            rs.getString("id"),
+                            rs.getString("title"),
+                            rs.getString("author"),
+                            rs.getString("publisher_name"),
+                            rs.getString("copyright"),
+                            rs.getString("isbn"),
+                            rs.getString("genre")
+                    });
+
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        if (!bookRows.isEmpty()) {
+            String[][] data = bookRows.toArray(new String[0][]);
+            JPanel panel = createCollapsiblePanel(genre, data);
+            genrePanels.put(genre, panel);
+            mainPanel.add(panel, gbc);
+        }
     }
 
     private void filterGenrePanels() {
         String selected = (String) genreComboBox.getSelectedItem();
         for (Map.Entry<String, JPanel> entry : genrePanels.entrySet()) {
-            entry.getValue().setVisible(selected.equals("All") || entry.getKey().equals(selected));
+            entry.getValue().setVisible("All".equals(selected) || selected.equals(entry.getKey()));
         }
         mainPanel.revalidate();
         mainPanel.repaint();
@@ -142,7 +141,6 @@ public class stuSearchBook extends JFrame {
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
-
         headerPanel.setPreferredSize(new Dimension(0, 80));
         headerPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -164,7 +162,6 @@ public class stuSearchBook extends JFrame {
         JLabel titleLabel = new JLabel("IMP Library");
         titleLabel.setFont(new Font("Verdana", Font.BOLD, 35));
         titleLabel.setForeground(Color.WHITE);
-
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         gbc.anchor = GridBagConstraints.CENTER;
@@ -186,14 +183,16 @@ public class stuSearchBook extends JFrame {
         JPanel tableContainer = new JPanel(new BorderLayout());
         tableContainer.setVisible(false);
 
-        String[] columns = {"Book ID", "Book Title", "ISBN", "Copyright", "Author", "Publisher"};
+        String[] columns = {"Book ID", "Title", "Author", "Publisher", "Copyright", "ISBN", "Genre", "Action"};
         JTable table = new JTable(new DefaultTableModel(bookData, columns));
+        table.getColumn("Action").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Action").setCellEditor(new ButtonEditor(new JCheckBox()));
         table.setFillsViewportHeight(true);
         table.setFont(new Font("Arial", Font.PLAIN, 15));
         table.setRowHeight(22);
         table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
             public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
                 JLabel label = (JLabel) super.getTableCellRendererComponent(
                         table, value, isSelected, hasFocus, row, column);
                 label.setBackground(new Color(80, 30, 120));
@@ -224,6 +223,181 @@ public class stuSearchBook extends JFrame {
         wrapper.add(tableContainer, BorderLayout.CENTER);
         return wrapper;
     }
+    private JButton createGradientButton(String text) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                int width = getWidth();
+                int height = getHeight();
+
+                Color color1 = Color.decode("#4E10A4");
+                Color color2 = Color.decode("#97579D");
+                GradientPaint gp = new GradientPaint(0, 0, color1, width, 0, color2);
+
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, width, height);
+                g2.dispose();
+
+                super.paintComponent(g);
+            }
+
+            @Override
+            public boolean isOpaque() {
+                return false;
+            }
+        };
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        return button;
+    }
+
+
+    class ButtonRenderer extends JButton implements TableCellRenderer {
+        public ButtonRenderer() {
+            setOpaque(true);
+            setText("Borrow");
+        }
+
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                       boolean isSelected, boolean hasFocus,
+                                                       int row, int column) {
+            return this;
+        }
+    }
+    class ButtonEditor extends DefaultCellEditor {
+        private JButton button;
+        private String bookId;
+        private JDialog dialog;
+        private int selectedQuantity = 1;
+        private int quantityLeft = 0;
+
+        public ButtonEditor(JCheckBox checkBox) {
+            super(checkBox);
+            button = new JButton("Borrow");
+            button.addActionListener(e -> showBorrowDialog());
+        }
+
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                                                     boolean isSelected, int row, int column) {
+            bookId = (String) table.getValueAt(row, 0);
+            return button;
+        }
+
+        private void showBorrowDialog() {
+            fetchQuantityLeftFromDB();
+
+            dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(button), "Borrow Book", true);
+            dialog.setLayout(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(10, 10, 10, 10);
+
+            JLabel quantityLabel = new JLabel("Stocky Left: " + quantityLeft);
+            JLabel selectedLabel = new JLabel("Borrowing: " + selectedQuantity);
+
+            JButton plusButton = createGradientButton("+");
+            JButton minusButton = createGradientButton("-");
+            JButton confirmButton = createGradientButton("Confirm");
+
+            plusButton.addActionListener(e -> {
+                if (selectedQuantity < quantityLeft) {
+                    selectedQuantity++;
+                    selectedLabel.setText("Borrowing: " + selectedQuantity);
+                }
+            });
+
+            minusButton.addActionListener(e -> {
+                if (selectedQuantity > 1) {
+                    selectedQuantity--;
+                    selectedLabel.setText("Borrowing: " + selectedQuantity);
+                }
+            });
+
+            confirmButton.addActionListener(e -> {
+                if (selectedQuantity > quantityLeft) {
+                    JOptionPane.showMessageDialog(dialog, "Not enough quantity available!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Get today's date
+                LocalDate today = LocalDate.now();
+                String formattedDate = today.format(DateTimeFormatter.ofPattern("MMMM dd, yyyy"));
+
+                try (Connection conn = DBConnection.getConnection()) {
+                    conn.setAutoCommit(false);
+
+                    try (PreparedStatement psUpdate = conn.prepareStatement(
+                            "UPDATE books SET qnty = qnty - ? WHERE id = ? AND qnty >= ?")) {
+                        psUpdate.setInt(1, selectedQuantity);
+                        psUpdate.setString(2, bookId);
+                        psUpdate.setInt(3, selectedQuantity);
+
+                        int rowsUpdated = psUpdate.executeUpdate();
+
+                        if (rowsUpdated > 0) {
+                            conn.commit();
+                            JOptionPane.showMessageDialog(dialog,
+                                    "Successfully borrowed " + selectedQuantity + " book(s).\nDate: " + formattedDate,
+                                    "Success", JOptionPane.INFORMATION_MESSAGE);
+                            dialog.dispose();
+
+                        } else {
+                            conn.rollback();
+                            JOptionPane.showMessageDialog(dialog, "Failed to borrow. Quantity may have changed.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(dialog, "Database error occurred!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+
+
+            gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+            dialog.add(quantityLabel, gbc);
+
+            gbc.gridy++;
+            dialog.add(selectedLabel, gbc);
+
+            gbc.gridy++; gbc.gridwidth = 1;
+            dialog.add(minusButton, gbc);
+            gbc.gridx = 1;
+            dialog.add(plusButton, gbc);
+
+            gbc.gridx = 0; gbc.gridy++;
+            gbc.gridwidth = 2;
+            dialog.add(confirmButton, gbc);
+
+            dialog.pack();
+            dialog.setLocationRelativeTo(button);
+            dialog.setPreferredSize(new Dimension(200, 250)); // Set dialog size
+            dialog.pack();
+            dialog.setLocationRelativeTo(button);
+            dialog.setVisible(true);
+        }
+
+        private void fetchQuantityLeftFromDB() {
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement("SELECT qnty FROM books WHERE id = ?")) {
+                ps.setString(1, bookId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        quantityLeft = rs.getInt("qnty");
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                quantityLeft = 0;
+            }
+        }
+    }
+
+
+
 
     class RoundedButton extends JButton {
         private final int radius;
@@ -269,25 +443,9 @@ public class stuSearchBook extends JFrame {
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
-
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setPreferredSize(new Dimension(300, getHeight()));
         panel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
-
-        ImageIcon logoIcon = new ImageIcon(getClass().getResource("implibraryLogo.png"));  // the image should on same directory with this class shet
-        if (logoIcon.getImageLoadStatus() == MediaTracker.COMPLETE) {
-            // Resize the image
-            Image img = logoIcon.getImage(); 
-            Image resizedImg = img.getScaledInstance(150, 150, Image.SCALE_SMOOTH); // Resize the image (adjust size as needed)
-            logoIcon = new ImageIcon(resizedImg); // Create a new ImageIcon with the resized image
-    
-            JLabel logoLabel = new JLabel(logoIcon);
-            logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            logoLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, -30, 0)); // Add margin around the logo
-            panel.add(logoLabel);
-        } else {
-            System.out.println("Logo image not found or couldn't be loaded!");
-        }
 
         JLabel menuListLabel = new JLabel("Hi There!");
         menuListLabel.setFont(new Font("Arial", Font.BOLD, 25));
@@ -331,27 +489,23 @@ public class stuSearchBook extends JFrame {
                 button.setOpaque(false);
             }
         });
-
         button.addActionListener(e -> handleNavigation(text));
         return button;
     }
-
     private void handleNavigation(String page) {
         if ("Logout".equals(page)) {
             int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                dispose(); // Or any logout logic
+                dispose();
             }
         }
     }
-
     private void toggleSidebar() {
         isSidebarVisible = !isSidebarVisible;
         sidebar.setVisible(isSidebarVisible);
         revalidate();
         repaint();
     }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new stuSearchBook().setVisible(true));
     }
