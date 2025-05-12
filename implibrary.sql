@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2025 at 02:29 AM
--- Server version: 10.4.24-MariaDB
--- PHP Version: 8.0.19
+-- Generation Time: May 12, 2025 at 06:56 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -29,17 +29,31 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `books` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `author` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `author` varchar(255) NOT NULL,
   `publisherId` bigint(20) UNSIGNED NOT NULL,
   `copyright` int(11) NOT NULL,
-  `isbn` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `genre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `isbn` varchar(255) NOT NULL,
+  `genre` varchar(255) NOT NULL,
   `qnty` int(11) NOT NULL,
   `isActive` tinyint(1) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `books`
+--
+
+INSERT INTO `books` (`id`, `title`, `author`, `publisherId`, `copyright`, `isbn`, `genre`, `qnty`, `isActive`, `created_at`, `updated_at`) VALUES
+(15, 'The Great Gatsby', 'F. Scott Fitzgerald', 1, 1925, '9780743273565', 'Classic', 10, 1, NULL, NULL),
+(16, '1984', 'George Orwell', 2, 1949, '9780451524935', 'Dystopian', 12, 1, NULL, NULL),
+(17, 'The Catcher in the Rye', 'J.D. Salinger', 3, 1951, '9780316769488', 'Classic', 8, 1, NULL, NULL),
+(18, 'Becoming', 'Michelle Obama', 4, 2018, '9781524763138', 'Memoir', 7, 1, NULL, NULL),
+(19, 'The Alchemist', 'Paulo Coelho', 5, 1988, '9780061122415', 'Adventure', 15, 1, NULL, NULL),
+(20, 'Sapiens', 'Yuval Noah Harari', 6, 2011, '9780062316097', 'History', 11, 1, NULL, NULL),
+(21, 'The Book Thief', 'Markus Zusak', 7, 2005, '9780375842207', 'Historical Fiction', 9, 1, NULL, NULL),
+(22, 'Harry Potter and the Sorcerer\'s Stone', 'J.K. Rowling', 8, 1997, '9780590353427', 'Fantasy', 20, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -55,9 +69,9 @@ CREATE TABLE `borroweds` (
   `approvedDate` date NOT NULL,
   `borrowedDate` date NOT NULL,
   `returnedDate` date NOT NULL,
-  `status` enum('pending','approved','denied','returned') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `status` enum('pending','approved','denied','returned') NOT NULL DEFAULT 'pending',
   `fee` int(11) NOT NULL,
-  `remarks` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `remarks` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -70,11 +84,11 @@ CREATE TABLE `borroweds` (
 
 CREATE TABLE `failed_jobs` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `uuid` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `connection` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `queue` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `exception` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
   `failed_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -86,7 +100,7 @@ CREATE TABLE `failed_jobs` (
 
 CREATE TABLE `migrations` (
   `id` int(10) UNSIGNED NOT NULL,
-  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -112,8 +126,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 --
 
 CREATE TABLE `password_resets` (
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -125,11 +139,11 @@ CREATE TABLE `password_resets` (
 
 CREATE TABLE `personal_access_tokens` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tokenable_type` varchar(255) NOT NULL,
   `tokenable_id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `abilities` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
   `last_used_at` timestamp NULL DEFAULT NULL,
   `expires_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -144,12 +158,26 @@ CREATE TABLE `personal_access_tokens` (
 
 CREATE TABLE `publishers` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `subName` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `Address` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `subName` varchar(255) NOT NULL,
+  `Address` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `publishers`
+--
+
+INSERT INTO `publishers` (`id`, `name`, `subName`, `Address`, `created_at`, `updated_at`) VALUES
+(1, 'Scribner', 'A Division of Simon & Schuster', '123 Main St, New York, NY', NULL, NULL),
+(2, 'Plume', 'Penguin Publishing Group', '345 Park Ave, New York, NY', NULL, NULL),
+(3, 'Little, Brown and Company', 'Hachette Book Group', '1290 Avenue of the Americas, NY', NULL, NULL),
+(4, 'Crown Publishing', 'Penguin Random House', '1745 Broadway, New York, NY', NULL, NULL),
+(5, 'HarperOne', 'HarperCollins Publishers', '195 Broadway, New York, NY', NULL, NULL),
+(6, 'Harper', 'HarperCollins', '195 Broadway, New York, NY', NULL, NULL),
+(7, 'Knopf Books', 'Random House', '1745 Broadway, New York, NY', NULL, NULL),
+(8, 'Scholastic Inc.', 'Arthur A. Levine Books', '557 Broadway, New York, NY', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -177,7 +205,7 @@ CREATE TABLE `sales` (
 CREATE TABLE `staffs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `userId` bigint(20) UNSIGNED NOT NULL,
-  `position` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `position` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -190,13 +218,13 @@ CREATE TABLE `staffs` (
 
 CREATE TABLE `users` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `role` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'user',
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `role` varchar(255) NOT NULL DEFAULT 'user',
+  `email` varchar(255) NOT NULL,
   `dob` date NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
-  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `remember_token` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -285,7 +313,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `books`
 --
 ALTER TABLE `books`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `borroweds`
@@ -315,7 +343,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT for table `publishers`
 --
 ALTER TABLE `publishers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `sales`
