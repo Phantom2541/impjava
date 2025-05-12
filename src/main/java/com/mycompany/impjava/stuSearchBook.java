@@ -1,13 +1,50 @@
 package com.mycompany.impjava;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.table.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultCellEditor;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 
 public class stuSearchBook extends JFrame {
     private boolean isSidebarVisible = true;
@@ -395,10 +432,6 @@ public class stuSearchBook extends JFrame {
             }
         }
     }
-
-
-
-
     class RoundedButton extends JButton {
         private final int radius;
 
@@ -447,18 +480,9 @@ public class stuSearchBook extends JFrame {
         panel.setPreferredSize(new Dimension(300, getHeight()));
         panel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
 
-        JLabel menuListLabel = new JLabel("Hi There!");
-        menuListLabel.setFont(new Font("Arial", Font.BOLD, 25));
-        menuListLabel.setForeground(Color.WHITE);
-        menuListLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(menuListLabel);
+        
 
-        JLabel menuListLabel2 = new JLabel("username");
-        menuListLabel2.setFont(new Font("Arial", Font.BOLD, 15));
-        menuListLabel2.setForeground(Color.WHITE);
-        menuListLabel2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuListLabel2.setBorder(BorderFactory.createEmptyBorder(0, 20, 30, 20));
-        panel.add(menuListLabel2);
+        
 
         panel.add(createSidebarButton("Browse"));
         panel.add(createSidebarButton("Borrow"));
@@ -493,11 +517,35 @@ public class stuSearchBook extends JFrame {
         return button;
     }
     private void handleNavigation(String page) {
-        if ("Logout".equals(page)) {
-            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                dispose();
-            }
+        switch (page) {
+            case "Browse":
+                //already here
+                break;
+            case "Borrow":
+                stuBorrow borrow = new stuBorrow();
+                borrow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                borrow.setLocationRelativeTo(null);
+                borrow.setVisible(true);
+                borrow.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
+                break;
+            case "Return":
+                stuReturn returnbook = new stuReturn();
+                returnbook.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                returnbook.setLocationRelativeTo(null);
+                returnbook.setVisible(true);
+                returnbook.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
+                break;
+            case "Logout":
+                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    dispose();  // Close the window
+                }
+                break;
+            default:
+                System.out.println("Unknown option: " + page);
+                break;
         }
     }
     private void toggleSidebar() {
