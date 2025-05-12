@@ -295,12 +295,13 @@ public class Borrowed extends JFrame {
 
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT id, name FROM users")) {
+             // Only select books where status is 'active'
+             ResultSet rs = stmt.executeQuery("SELECT id, title FROM books WHERE isActive == '1'")) {
 
             while (rs.next()) {
                 String id = rs.getString("id");
-                String name = rs.getString("name");
-                userComboBox.addItem(id + " - " + name);
+                String title = rs.getString("title");
+                bookComboBox.addItem(id + " - " + title);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
