@@ -1,52 +1,15 @@
 package com.mycompany.impjava;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Vector;
-import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
-import java.util.Map;
-import java.util.LinkedHashMap;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
 public class Staffs extends JFrame {
     private JPanel sidebar, contentArea;
     private boolean isSidebarVisible = true;
-    private DefaultTableModel model;
-    private JTable table;
 
     public Staffs() {
-        setTitle("Staffs");
+        setTitle("Library Management");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -68,7 +31,7 @@ public class Staffs extends JFrame {
         topBar.setPreferredSize(new Dimension(getWidth(), 80));
         topBar.setLayout(new BorderLayout());
 
-        JLabel welcomeLabel = new JLabel("List of Staffs", JLabel.CENTER);
+        JLabel welcomeLabel = new JLabel("Library Dashboard", JLabel.CENTER);
         welcomeLabel.setFont(new Font("Verdana", Font.BOLD, 35));
         welcomeLabel.setForeground(Color.WHITE);
         topBar.add(welcomeLabel, BorderLayout.CENTER);
@@ -91,50 +54,11 @@ public class Staffs extends JFrame {
         buttonPanel.add(toggleButton, BorderLayout.CENTER);
         topBar.add(buttonPanel, BorderLayout.WEST);
 
-        JButton addStaffButton = new JButton("+");
-        addStaffButton.setFont(new Font("Arial", Font.BOLD, 16));
-        addStaffButton.setForeground(Color.WHITE);
-        addStaffButton.setBackground(Color.decode("#5012a3"));
-        addStaffButton.setFocusPainted(false);
-        addStaffButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        addStaffButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        addStaffButton.addActionListener(e -> openAddDialog());
-
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        rightPanel.setOpaque(false);
-        rightPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        rightPanel.add(addStaffButton);
-        topBar.add(rightPanel, BorderLayout.EAST);
-
         contentArea.add(topBar, BorderLayout.NORTH);
-
-        String[] columnNames = {"ID", "Name", "Position", "ACTIONS"};
-        model = new DefaultTableModel(columnNames, 0);
-        table = new JTable(model) {
-            public boolean isCellEditable(int row, int column) {
-                return column == 3;
-            }
-        };
-
-        table.setRowHeight(40);
-        table.getTableHeader().setBackground(new Color(80, 30, 120));
-        table.getTableHeader().setForeground(Color.WHITE);
-        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
-
-        table.getColumn("ACTIONS").setCellRenderer(new ButtonRenderer());
-        table.getColumn("ACTIONS").setCellEditor(new ButtonEditor(new JCheckBox()));
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
-        tablePanel.add(scrollPane, BorderLayout.CENTER);
-        contentArea.add(tablePanel, BorderLayout.CENTER);
         add(contentArea, BorderLayout.CENTER);
-
-        loadStaffsFromDatabase();
     }
 
-     private JPanel createSidebar() {
+    private JPanel createSidebar() {
         JPanel panel = new JPanel() {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -155,16 +79,13 @@ public class Staffs extends JFrame {
         menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
-        panel.add(createSidebarButton("Home"));
-        panel.add(createSidebarButton("Books"));
-        panel.add(createSidebarButton("Users"));
-        panel.add(createSidebarButton("Staffs"));
-        panel.add(createSidebarButton("Sales"));
-        panel.add(createSidebarButton("Borrows"));
-        panel.add(createSidebarButton("Publishers"));
-        panel.add(Box.createVerticalGlue());
-        panel.add(createSidebarButton("Logout"));
+        // Remove "Staffs" from this array
+        String[] buttons = {"Home", "Books", "Users", "Sales", "Borrows", "Publishers", "Logout"};
+        for (String label : buttons) {
+            panel.add(createSidebarButton(label));
+        }
 
+        panel.add(Box.createVerticalGlue());
         return panel;
     }
 
@@ -193,82 +114,24 @@ public class Staffs extends JFrame {
         button.addActionListener(e -> handleNavigation(text));
         return button;
     }
-    
+
     private void handleNavigation(String page) {
         switch (page) {
-            case "Home":
-                Dashboard dashboard = new Dashboard();
-                dashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                dashboard.setLocationRelativeTo(null);
-                dashboard.setVisible(true); 
-                dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-                break;
-
-            case "Books":
-                Books books = new Books();
-                books.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                books.setLocationRelativeTo(null);
-                books.setVisible(true); 
-                books.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-            break;
-
-            case "Users":
-                Users users = new Users();
-                users.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                users.setLocationRelativeTo(null);
-                users.setVisible(true); 
-                users.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-            break;
-
-            case "Staffs":
-              //already on staff side ewe
-            break;
-
-            case "Sales":
-                Sales sales = new Sales();
-                sales.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                sales.setLocationRelativeTo(null);
-                sales.setVisible(true); 
-                sales.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-            break;
-
-            case "Borrows":
-                Borrowed borrowed= new Borrowed();
-                borrowed.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                borrowed.setLocationRelativeTo(null);
-                borrowed.setVisible(true); 
-                borrowed.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                this.dispose();
-            break;
-
-            case "Publishers":
-            Publisher publisher= new Publisher();
-            publisher.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            publisher.setLocationRelativeTo(null);
-            publisher.setVisible(true); 
-            publisher.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            this.dispose();
-            break;
-
+            case "Home": new Dashboard().setVisible(true); break;
+            case "Books": new Books().setVisible(true); break;
+            case "Users": new Users().setVisible(true); break;
+            case "Sales": new Sales().setVisible(true); break;
+            case "Borrows": new Borrowed().setVisible(true); break;
+            case "Publishers": new Publisher().setVisible(true); break;
             case "Logout":
                 int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    Login login = new Login();
-                    login.setVisible(true);
-                    login.pack();
-                    login.setLocationRelativeTo(null);
-                    login.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+                    new Login().setVisible(true);
                     this.dispose();
                 }
-                break;
+                return;
         }
-
-        contentArea.revalidate();
-        contentArea.repaint();
+        this.dispose();
     }
 
     private void toggleSidebar() {
@@ -276,180 +139,6 @@ public class Staffs extends JFrame {
         sidebar.setVisible(isSidebarVisible);
         revalidate();
         repaint();
-    }
-
-    private void openAddDialog() {
-        try (Connection conn = DBConnection.getConnection()) {
-            // Load users into a map
-            Map<String, String> userMap = new LinkedHashMap<>();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT id, name FROM users");
-            while (rs.next()) {
-                userMap.put(rs.getString("name"), rs.getString("id"));
-            }
-
-            // Create form components
-            JComboBox<String> userBox = new JComboBox<>(userMap.keySet().toArray(new String[0]));
-            JTextField positionField = new JTextField();
-
-            JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-            inputPanel.add(new JLabel("User:"));
-            inputPanel.add(userBox);
-            inputPanel.add(new JLabel("Position:"));
-            inputPanel.add(positionField);
-
-            int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Staff", JOptionPane.OK_CANCEL_OPTION);
-            if (option == JOptionPane.OK_OPTION) {
-                String selectedUserId = userMap.get((String) userBox.getSelectedItem());
-
-                String sql = "INSERT INTO staffs (userId, position) VALUES (?, ?)";
-                PreparedStatement stmtInsert = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-                stmtInsert.setString(1, selectedUserId);
-                stmtInsert.setString(2, positionField.getText());
-                stmtInsert.executeUpdate();
-
-                ResultSet generatedKeys = stmtInsert.getGeneratedKeys();
-                String id = generatedKeys.next() ? generatedKeys.getString(1) : "";
-
-                // Add to table
-                Vector<Object> row = new Vector<>();
-                row.add(id);
-                row.add(userBox.getSelectedItem()); // Display name
-                row.add(positionField.getText());
-                row.add("Actions");
-                model.addRow(row);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void openEditDialog(int row) {
-        try (Connection conn = DBConnection.getConnection()) {
-            // Load users
-            Map<String, String> userMap = new LinkedHashMap<>();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT id, name FROM users");
-            while (rs.next()) {
-                userMap.put(rs.getString("name"), rs.getString("id"));
-            }
-
-            // Prepare form
-            String currentUserId = model.getValueAt(row, 1).toString();
-            String currentUserName = null;
-            for (Map.Entry<String, String> entry : userMap.entrySet()) {
-                if (entry.getValue().equals(currentUserId)) {
-                    currentUserName = entry.getKey();
-                    break;
-                }
-            }
-
-            JComboBox<String> userBox = new JComboBox<>(userMap.keySet().toArray(new String[0]));
-            if (currentUserName != null) userBox.setSelectedItem(currentUserName);
-
-            JTextField positionField = new JTextField(model.getValueAt(row, 2).toString());
-
-            JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-            inputPanel.add(new JLabel("User:"));
-            inputPanel.add(userBox);
-            inputPanel.add(new JLabel("Position:"));
-            inputPanel.add(positionField);
-
-            int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Staff", JOptionPane.OK_CANCEL_OPTION);
-            if (option == JOptionPane.OK_OPTION) {
-                String selectedUserId = userMap.get((String) userBox.getSelectedItem());
-
-                String sql = "UPDATE staffs SET userId=?, position=? WHERE id=?";
-                PreparedStatement stmtUpdate = conn.prepareStatement(sql);
-                stmtUpdate.setString(1, selectedUserId);
-                stmtUpdate.setString(2, positionField.getText());
-                stmtUpdate.setString(3, model.getValueAt(row, 0).toString()); // staff ID from model
-                stmtUpdate.executeUpdate();
-
-                // Update table model
-                model.setValueAt(userBox.getSelectedItem(), row, 1); // display name
-                model.setValueAt(positionField.getText(), row, 2);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    class ButtonRenderer extends JPanel implements TableCellRenderer {
-        private final JButton editButton = new JButton("Edit");
-        private final JButton deleteButton = new JButton("Del");
-
-        public ButtonRenderer() {
-            setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-            add(editButton);
-            add(deleteButton);
-        }
-
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            return this;
-        }
-    }
-
-    class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
-        private final JButton editButton = new JButton("Edit");
-        private final JButton deleteButton = new JButton("Del");
-        private int currentRow;
-
-        public ButtonEditor(JCheckBox checkBox) {
-            panel.add(editButton);
-            panel.add(deleteButton);
-
-            editButton.addActionListener(e -> {
-                fireEditingStopped();
-                openEditDialog(currentRow);
-            });
-
-            deleteButton.addActionListener(e -> {
-                fireEditingStopped();
-                int confirm = JOptionPane.showConfirmDialog(Staffs.this, "Are you sure to delete this entry?", "Confirm", JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    try (Connection conn = DBConnection.getConnection()) {
-                        String id = model.getValueAt(currentRow, 0).toString();
-                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM staffs WHERE staff_id = ?");
-                        stmt.setString(1, id);
-                        stmt.executeUpdate();
-                        model.removeRow(currentRow);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            });
-        }
-
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            currentRow = row;
-            return panel;
-        }
-
-        public Object getCellEditorValue() {
-            return null;
-        }
-    }
-
-    private void loadStaffsFromDatabase() {
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("""
-                                                  SELECT s.id, u.name, s.position FROM staffs s JOIN users u ON s.userId = u.id
-                                              """)) {
-
-            while (rs.next()) {
-                Vector<Object> row = new Vector<>();
-                for (int i = 1; i <= 3; i++) {
-                    row.add(rs.getString(i));
-                }
-                row.add("Actions");
-                model.addRow(row);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public static void main(String[] args) {
