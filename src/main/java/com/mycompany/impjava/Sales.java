@@ -1,5 +1,6 @@
 package com.mycompany.impjava;
 
+<<<<<<< Updated upstream
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
@@ -8,6 +9,15 @@ import java.sql.*;
 import java.util.Vector;
 import java.util.Map;
 import java.util.LinkedHashMap;
+=======
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.*;
+import java.util.Vector;
+import javax.swing.*;
+import javax.swing.table.*;
+>>>>>>> Stashed changes
 
 public class Sales extends JFrame {
     private JPanel sidebar, contentArea;
@@ -124,8 +134,15 @@ public class Sales extends JFrame {
         menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
+<<<<<<< Updated upstream
         String[] items = {"Home", "Books", "Users", "Staffs", "Sales", "Borrows", "Publishers", "Logout"};
         for (String item : items) panel.add(createSidebarButton(item));
+=======
+        String[] menuItems = {"Home", "Books", "Users", "Staffs", "Sales", "Borrows", "Publishers", "Logout"};
+        for (String item : menuItems) {
+            panel.add(createSidebarButton(item));
+        }
+>>>>>>> Stashed changes
 
         panel.add(Box.createVerticalGlue());
         return panel;
@@ -156,6 +173,7 @@ public class Sales extends JFrame {
     }
 
     private void handleNavigation(String page) {
+<<<<<<< Updated upstream
         JFrame target = switch (page) {
             case "Home" -> new Dashboard();
             case "Books" -> new Books();
@@ -181,6 +199,33 @@ public class Sales extends JFrame {
             target.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             this.dispose();
         }
+=======
+        JFrame target = null;
+
+        switch (page) {
+            case "Home": target = new Dashboard(); break;
+            case "Books": target = new Books(); break;
+            case "Users": target = new Users(); break;
+            case "Staffs": target = new Staffs(); break;
+            case "Borrows": target = new Borrowed(); break;
+            case "Publishers": target = new Publisher(); break;
+            case "Sales": return; // Already here
+            case "Logout":
+                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    target = new Login();
+                } else return;
+                break;
+        }
+
+        if (target != null) {
+            target.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            target.setLocationRelativeTo(null);
+            target.setVisible(true);
+            target.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            this.dispose();
+        }
+>>>>>>> Stashed changes
     }
 
     private void toggleSidebar() {
@@ -324,6 +369,15 @@ public class Sales extends JFrame {
     }
 
     class ButtonRenderer extends JPanel implements TableCellRenderer {
+<<<<<<< Updated upstream
+=======
+        public ButtonRenderer() {
+            setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+            add(new JButton("Edit"));
+            add(new JButton("Del"));
+        }
+
+>>>>>>> Stashed changes
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             JButton edit = new JButton("Edit"), del = new JButton("Del");
             JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -378,10 +432,14 @@ public class Sales extends JFrame {
     private void loadSalesFromDatabase() {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
+<<<<<<< Updated upstream
              ResultSet rs = stmt.executeQuery("""
                                                   SELECT s.id, staffUser.name, customerUser.name, b.title AS book_title, s.qnty, s.amount FROM sales s JOIN staffs st ON s.staffId = st.id JOIN users staffUser ON st.userId = staffUser.id JOIN users customerUser ON s.customerId = customerUser.id JOIN books b ON s.bookId = b.id
                                               """)) {
 
+=======
+             ResultSet rs = stmt.executeQuery("SELECT sales_id, staff_id, user_id, book_id, quantity, amount FROM sales")) {
+>>>>>>> Stashed changes
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
                 for (int i = 1; i <= 6; i++) row.add(rs.getString(i));
