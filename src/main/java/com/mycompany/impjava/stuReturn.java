@@ -2,6 +2,7 @@ package com.mycompany.impjava;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
@@ -9,10 +10,9 @@ public class stuReturn extends JFrame {
     private boolean isSidebarVisible = true;
     private JPanel sidebar;
     private JPanel mainPanel;
-    private JComboBox<String> genreComboBox;
 
     public stuReturn() {
-        setTitle("Books by Genre");
+        setTitle("Borrowed Books");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLayout(new BorderLayout());
@@ -22,9 +22,9 @@ public class stuReturn extends JFrame {
         add(sidebar, BorderLayout.WEST);
 
         mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 20, 40));  // Add margins to mainPanel
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 20, 40));
 
-        JTable table = createTableWithoutActionColumn();
+        JTable table = createBorrowedsTable();
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
@@ -32,22 +32,39 @@ public class stuReturn extends JFrame {
         add(mainPanel, BorderLayout.CENTER);
     }
 
-    private JTable createTableWithoutActionColumn() {
-        String[] columns = { "column1", "column2", "column3", "column4", "column5" };
-        Object[][] data = {
-                { "Value 1", "Value 2", "Value 3", "Value 4", "Value 5" },
-                { "Data A", "Data B", "Data C", "Data D", "Data E" },
-                { "Alpha", "Beta", "Gamma", "Delta", "Epsilon" }
-        };
+    private JTable createBorrowedsTable() {
+        String[] columns = { "ID", "Book ID", "User ID", "Approved ID", "Approved Date", "Borrowed Date", "Status", "Fee", "Remarks" };
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
 
-        DefaultTableModel model = new DefaultTableModel(data, columns);
+        try (Connection conn = DBConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, bookID, userID, approvedID, approvedDate, borrowedDate, status, fee, remarks FROM borroweds");
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Object[] row = {
+                        rs.getInt("id"),
+                        rs.getString("bookID"),
+                        rs.getString("userID"),
+                        rs.getString("approvedID"),
+                        rs.getDate("approvedDate"),
+                        rs.getDate("borrowedDate"),
+                        rs.getString("status"),
+                        rs.getDouble("fee"),
+                        rs.getString("remarks")
+                };
+                model.addRow(row);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage());
+        }
 
         JTable table = new JTable(model);
         table.setRowHeight(30);
         table.setFont(new Font("SansSerif", Font.PLAIN, 14));
         table.setFillsViewportHeight(true);
 
-        // Header styling
         JTableHeader header = table.getTableHeader();
         TableCellRenderer headerRenderer = new CustomHeaderRenderer();
         for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
@@ -162,12 +179,12 @@ public class stuReturn extends JFrame {
                 this.dispose();
                 break;
             case "Return":
-                //already here
+                // Already here
                 break;
             case "Logout":
                 int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    dispose();  // Close the window
+                    dispose();
                 }
                 break;
             default:
@@ -183,7 +200,6 @@ public class stuReturn extends JFrame {
         repaint();
     }
 
-    // Custom Header Renderer (Optional - You can customize the header style here)
     class CustomHeaderRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -191,8 +207,21 @@ public class stuReturn extends JFrame {
             label.setBackground(Color.decode("#501E78"));
             label.setForeground(Color.WHITE);
             label.setFont(new Font("Verdana", Font.BOLD, 16));
-            label.setHorizontalAlignment(SwingConstants.CENTER);  // Center the header text
+            label.setHorizontalAlignment(SwingConstants.CENTER);
             return label;
+        }
+    }
+
+    // Replace with your actual DBConnection function or import it from your utility class
+    private Connection DBConnection() throws SQLException {
+        // Placeholder: Use your actual connection logic
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver"); // Ensure you have the MySQL JDBC driver
+            return DriverManager.getConnection("jdbc:mysql://localhost:3306/implibrary", "root", "");
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Database connection failed!");
+            return null;
         }
     }
 

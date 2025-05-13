@@ -2,33 +2,12 @@ package com.mycompany.impjava;
 
 import java.sql.*;
 import java.util.Vector;
-<<<<<<< Updated upstream
-import javax.swing.AbstractCellEditor;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
-import java.util.Map;
-import java.util.LinkedHashMap;
-=======
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.*;
->>>>>>> Stashed changes
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class Staffs extends JFrame {
     private JPanel sidebar, contentArea;
@@ -99,15 +78,11 @@ public class Staffs extends JFrame {
 
         contentArea.add(topBar, BorderLayout.NORTH);
 
-<<<<<<< Updated upstream
-        String[] columnNames = {"ID", "Name", "Position", "ACTIONS"};
-=======
-        String[] columnNames = {"id", "username", "position", "ACTIONS"};
->>>>>>> Stashed changes
+        String[] columnNames = {"ID", "Name", "Position", "Return Date", "Actions"};
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model) {
             public boolean isCellEditable(int row, int column) {
-                return column == 3;
+                return column == 4; // Actions column
             }
         };
 
@@ -123,8 +98,8 @@ public class Staffs extends JFrame {
         table.getTableHeader().setBackground(new Color(80, 30, 120));
         table.getTableHeader().setForeground(Color.WHITE);
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
-        table.getColumn("ACTIONS").setCellRenderer(new ButtonRenderer());
-        table.getColumn("ACTIONS").setCellEditor(new ButtonEditor(new JCheckBox()));
+        table.getColumn("Actions").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Actions").setCellEditor(new ButtonEditor(new JCheckBox()));
 
         JScrollPane scrollPane = new JScrollPane(table);
         JPanel tablePanel = new JPanel(new BorderLayout());
@@ -154,7 +129,6 @@ public class Staffs extends JFrame {
         menuListLabel.setFont(new Font("Arial", Font.BOLD, 25));
         menuListLabel.setForeground(Color.WHITE);
         menuListLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
         String[] buttons = {"Home", "Books", "Users", "Staffs", "Sales", "Borrows", "Publishers", "Logout"};
@@ -220,7 +194,6 @@ public class Staffs extends JFrame {
     }
 
     private void openAddDialog() {
-<<<<<<< Updated upstream
         try (Connection conn = DBConnection.getConnection()) {
             // Load users into a map
             Map<String, String> userMap = new LinkedHashMap<>();
@@ -233,21 +206,25 @@ public class Staffs extends JFrame {
             // Create form components
             JComboBox<String> userBox = new JComboBox<>(userMap.keySet().toArray(new String[0]));
             JTextField positionField = new JTextField();
+            JTextField returnDateField = new JTextField();
 
             JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
             inputPanel.add(new JLabel("User:"));
             inputPanel.add(userBox);
             inputPanel.add(new JLabel("Position:"));
             inputPanel.add(positionField);
+            inputPanel.add(new JLabel("Return Date:"));
+            inputPanel.add(returnDateField);
 
             int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Staff", JOptionPane.OK_CANCEL_OPTION);
             if (option == JOptionPane.OK_OPTION) {
                 String selectedUserId = userMap.get((String) userBox.getSelectedItem());
 
-                String sql = "INSERT INTO staffs (userId, position) VALUES (?, ?)";
+                String sql = "INSERT INTO staffs (userId, position, returnDate) VALUES (?, ?, ?)";
                 PreparedStatement stmtInsert = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
                 stmtInsert.setString(1, selectedUserId);
                 stmtInsert.setString(2, positionField.getText());
+                stmtInsert.setString(3, returnDateField.getText());  // Add return date
                 stmtInsert.executeUpdate();
 
                 ResultSet generatedKeys = stmtInsert.getGeneratedKeys();
@@ -256,140 +233,94 @@ public class Staffs extends JFrame {
                 // Add to table
                 Vector<Object> row = new Vector<>();
                 row.add(id);
-                row.add(userBox.getSelectedItem()); // Display name
+                row.add(userBox.getSelectedItem());
                 row.add(positionField.getText());
+                row.add(returnDateField.getText());  // Add return date to table
                 row.add("Actions");
                 model.addRow(row);
-=======
-        JTextField idField = new JTextField();
-        JTextField usernameField = new JTextField();
-        JTextField positionField = new JTextField();
-
-        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
-        panel.add(new JLabel("id:"));
-        panel.add(idField);
-        panel.add(new JLabel("username:"));
-        panel.add(usernameField);
-        panel.add(new JLabel("position:"));
-        panel.add(positionField);
-
-        int result = JOptionPane.showConfirmDialog(this, panel, "Add New Staff", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (result == JOptionPane.OK_OPTION) {
-            String id = idField.getText().trim();
-            String username = usernameField.getText().trim();
-            String position = positionField.getText().trim();
-
-            if (id.isEmpty() || username.isEmpty() || position.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "All fields are required!", "Validation Error", JOptionPane.ERROR_MESSAGE);
-                return;
             }
-
-            try (Connection conn = DBConnection.getConnection()) {
-                String sql = "INSERT INTO staffs (id, username, position) VALUES (?, ?, ?)";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, id);
-                stmt.setString(2, username);
-                stmt.setString(3, position);
-                int rows = stmt.executeUpdate();
-
-                if (rows > 0) {
-                    Vector<Object> newRow = new Vector<>();
-                    newRow.add(id);
-                    newRow.add(username);
-                    newRow.add(position);
-                    newRow.add("Actions");
-                    model.addRow(newRow);
-                    JOptionPane.showMessageDialog(this, "Staff added successfully!");
-                } else {
-                    JOptionPane.showMessageDialog(this, "Staff not added. Please check input values.");
-                }
-            } catch (SQLIntegrityConstraintViolationException ex) {
-                JOptionPane.showMessageDialog(this, "Duplicate ID or invalid Username. Please check constraints.", "Error", JOptionPane.ERROR_MESSAGE);
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
->>>>>>> Stashed changes
-            }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error adding staff.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    private void loadStaffsFromDatabase() {
+        model.setRowCount(0); // Clear table first
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("""
+                                                  SELECT s.id, u.name, s.position, s.returnDate 
+                                                  FROM staffs s JOIN users u ON s.userId = u.id
+                                              """)) {
+            while (rs.next()) {
+                Vector<Object> row = new Vector<>();
+                row.add(rs.getString("id"));
+                row.add(rs.getString("name"));
+                row.add(rs.getString("position"));
+                row.add(rs.getString("returnDate"));  // Add return date to the table
+                row.add("Actions");
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     private void openEditDialog(int row) {
-<<<<<<< Updated upstream
+        String id = model.getValueAt(row, 0).toString();
+        String currentName = model.getValueAt(row, 1).toString();
+        String currentPosition = model.getValueAt(row, 2).toString();
+        String currentReturnDate = model.getValueAt(row, 3).toString();
+
         try (Connection conn = DBConnection.getConnection()) {
-            // Load users
+            // Load users into a map
             Map<String, String> userMap = new LinkedHashMap<>();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT id, name FROM users");
             while (rs.next()) {
                 userMap.put(rs.getString("name"), rs.getString("id"));
-=======
-        JTextField[] fields = new JTextField[3];
-        String[] labels = {"id", "username", "position"};
-        JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-
-        for (int i = 0; i < labels.length; i++) {
-            inputPanel.add(new JLabel(labels[i] + ":"));
-            fields[i] = new JTextField(model.getValueAt(row, i).toString());
-            inputPanel.add(fields[i]);
-        }
-
-        int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Staff", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            try (Connection conn = DBConnection.getConnection()) {
-                String sql = "UPDATE staffs SET username=?, position=? WHERE id=?";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, fields[1].getText());
-                stmt.setString(2, fields[2].getText());
-                stmt.setString(3, fields[0].getText());
-                stmt.executeUpdate();
-
-                for (int i = 0; i < 3; i++) model.setValueAt(fields[i].getText(), row, i);
-            } catch (Exception ex) {
-                ex.printStackTrace();
->>>>>>> Stashed changes
-            }
-
-            // Prepare form
-            String currentUserId = model.getValueAt(row, 1).toString();
-            String currentUserName = null;
-            for (Map.Entry<String, String> entry : userMap.entrySet()) {
-                if (entry.getValue().equals(currentUserId)) {
-                    currentUserName = entry.getKey();
-                    break;
-                }
             }
 
             JComboBox<String> userBox = new JComboBox<>(userMap.keySet().toArray(new String[0]));
-            if (currentUserName != null) userBox.setSelectedItem(currentUserName);
+            userBox.setSelectedItem(currentName);
 
-            JTextField positionField = new JTextField(model.getValueAt(row, 2).toString());
+            JTextField positionField = new JTextField(currentPosition);
+            JTextField returnDateField = new JTextField(currentReturnDate);
 
             JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
             inputPanel.add(new JLabel("User:"));
             inputPanel.add(userBox);
             inputPanel.add(new JLabel("Position:"));
             inputPanel.add(positionField);
+            inputPanel.add(new JLabel("Return Date:"));
+            inputPanel.add(returnDateField);
 
             int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Staff", JOptionPane.OK_CANCEL_OPTION);
             if (option == JOptionPane.OK_OPTION) {
-                String selectedUserId = userMap.get((String) userBox.getSelectedItem());
+                String selectedUserId = userMap.get(userBox.getSelectedItem().toString());
 
-                String sql = "UPDATE staffs SET userId=?, position=? WHERE id=?";
-                PreparedStatement stmtUpdate = conn.prepareStatement(sql);
-                stmtUpdate.setString(1, selectedUserId);
-                stmtUpdate.setString(2, positionField.getText());
-                stmtUpdate.setString(3, model.getValueAt(row, 0).toString()); // staff ID from model
-                stmtUpdate.executeUpdate();
+                String sql = "UPDATE staffs SET userId = ?, position = ?, returnDate = ? WHERE id = ?";
+                PreparedStatement updateStmt = conn.prepareStatement(sql);
+                updateStmt.setString(1, selectedUserId);
+                updateStmt.setString(2, positionField.getText());
+                updateStmt.setString(3, returnDateField.getText());
+                updateStmt.setString(4, id);
+                updateStmt.executeUpdate();
 
-                // Update table model
-                model.setValueAt(userBox.getSelectedItem(), row, 1); // display name
+                // Update UI table
+                model.setValueAt(userBox.getSelectedItem(), row, 1);
                 model.setValueAt(positionField.getText(), row, 2);
+                model.setValueAt(returnDateField.getText(), row, 3);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error updating staff.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new Staffs().setVisible(true));
     }
 
     class ButtonRenderer extends JPanel implements TableCellRenderer {
@@ -398,11 +329,15 @@ public class Staffs extends JFrame {
 
         public ButtonRenderer() {
             setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+            editButton.setEnabled(true);
+            deleteButton.setEnabled(true);
             add(editButton);
             add(deleteButton);
         }
 
+        @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            setBackground(isSelected ? table.getSelectionBackground() : (row % 2 == 0 ? Color.WHITE : new Color(240, 240, 240)));
             return this;
         }
     }
@@ -411,27 +346,29 @@ public class Staffs extends JFrame {
         private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
         private final JButton editButton = new JButton("Edit");
         private final JButton deleteButton = new JButton("Del");
-        private int currentRow;
+        private int currentRow = -1;  // Default value for currentRow
 
         public ButtonEditor(JCheckBox checkBox) {
             panel.add(editButton);
             panel.add(deleteButton);
 
+            // Edit Button Action
             editButton.addActionListener(e -> {
-                fireEditingStopped();
-                openEditDialog(currentRow);
+                fireEditingStopped();  // Stops editing
+                openEditDialog(currentRow);  // Open the edit dialog for the staff at currentRow
             });
 
+            // Delete Button Action
             deleteButton.addActionListener(e -> {
-                fireEditingStopped();
-                int confirm = JOptionPane.showConfirmDialog(Staffs.this, "Are you sure to delete this entry?", "Confirm", JOptionPane.YES_NO_OPTION);
+                fireEditingStopped();  // Stops editing
+                int confirm = JOptionPane.showConfirmDialog(panel, "Are you sure to delete this entry?", "Confirm", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     try (Connection conn = DBConnection.getConnection()) {
-                        String id = model.getValueAt(currentRow, 0).toString();
+                        String id = model.getValueAt(currentRow, 0).toString();  // Get the ID of the selected row
                         PreparedStatement stmt = conn.prepareStatement("DELETE FROM staffs WHERE id = ?");
                         stmt.setString(1, id);
                         stmt.executeUpdate();
-                        model.removeRow(currentRow);
+                        model.removeRow(currentRow);  // Remove from table
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -439,44 +376,17 @@ public class Staffs extends JFrame {
             });
         }
 
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            currentRow = row;
-            return panel;
-        }
+
 
         @Override
         public Object getCellEditorValue() {
+            return null;  // No need to return any value
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             return null;
         }
     }
 
-    private void loadStaffsFromDatabase() {
-        model.setRowCount(0); // Clear table first
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-<<<<<<< Updated upstream
-             ResultSet rs = stmt.executeQuery("""
-                                                  SELECT s.id, u.name, s.position FROM staffs s JOIN users u ON s.userId = u.id
-                                              """)) {
-
-=======
-             ResultSet rs = stmt.executeQuery("SELECT id, username, position FROM staffs")) {
->>>>>>> Stashed changes
-            while (rs.next()) {
-                Vector<Object> row = new Vector<>();
-                row.add(rs.getString("id"));
-                row.add(rs.getString("username"));
-                row.add(rs.getString("position"));
-                row.add("Actions");
-                model.addRow(row);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Staffs().setVisible(true));
-    }
 }
