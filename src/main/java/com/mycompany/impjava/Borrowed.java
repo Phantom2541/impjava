@@ -17,8 +17,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Vector;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -28,7 +26,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeParseException;
-
 
 public class Borrowed extends JFrame {
     private JPanel sidebar, contentArea;
@@ -91,7 +88,7 @@ public class Borrowed extends JFrame {
         addBookButton.setFocusPainted(false);
         addBookButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         addBookButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        addBookButton.addActionListener(e -> openAddBookDialog(model));
+        addBookButton.addActionListener(e -> openAddBorrowDialog(model));
 
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightPanel.setOpaque(false);
@@ -101,11 +98,14 @@ public class Borrowed extends JFrame {
 
         contentArea.add(topBar, BorderLayout.NORTH);
 
-        String[] columnNames = {"BorrowID", "Book", "User", "BorrowedDate", "ReturnedDate", "Fee", "ACTIONS"};
+        String[] columnNames = {
+                "ID", "Book ID", "User ID", "Approved ID", "Approved Date",
+                "Borrowed Date", "Returned Date", "Status", "Fee", "Remarks", "Created At", "Updated At", "ACTIONS"
+        };
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model) {
             public boolean isCellEditable(int row, int column) {
-                return column == 6;
+                return column == 12; // Only ACTIONS column editable to have buttons
             }
         };
 
@@ -121,7 +121,7 @@ public class Borrowed extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(table);
         JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+        tablePanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
         contentArea.add(tablePanel, BorderLayout.CENTER);
         add(contentArea, BorderLayout.CENTER);
@@ -236,7 +236,7 @@ public class Borrowed extends JFrame {
                 break;
 
             case "Borrows":
-                //already on borrow side ewe
+                // Already on borrow side
                 break;
 
             case "Publishers":
@@ -271,26 +271,42 @@ public class Borrowed extends JFrame {
         repaint();
     }
 
-
-    private void openAddBookDialog(DefaultTableModel model) {
-        JComboBox<String> bookComboBox = new JComboBox<>(getActiveBooks());
-        JComboBox<String> userComboBox = new JComboBox<>(getUsers());
+    private void openAddBorrowDialog(DefaultTableModel model) {
+        JTextField bookIdField = new JTextField();
+        JTextField userIdField = new JTextField();
+        JTextField approvedIdField = new JTextField();
+        JTextField approvedDateField = new JTextField();
         JTextField borrowedDateField = new JTextField(LocalDate.now().toString());
-        borrowedDateField.setEditable(false);
         JTextField returnedDateField = new JTextField();
+        JTextField statusField = new JTextField();
         JTextField feeField = new JTextField();
+        JTextField remarksField = new JTextField();
+
+        approvedDateField.setToolTipText("Format: yyyy-mm-dd");
+        borrowedDateField.setToolTipText("Format: yyyy-mm-dd");
+        returnedDateField.setToolTipText("Format: yyyy-mm-dd");
+
+        borrowedDateField.setEditable(false); // borrowed date default to today and not editable
 
         JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-        inputPanel.add(new JLabel("Book:"));
-        inputPanel.add(bookComboBox);
-        inputPanel.add(new JLabel("User:"));
-        inputPanel.add(userComboBox);
-        inputPanel.add(new JLabel("BorrowedDate (yyyy-mm-dd):"));
+        inputPanel.add(new JLabel("Book ID:"));
+        inputPanel.add(bookIdField);
+        inputPanel.add(new JLabel("User ID:"));
+        inputPanel.add(userIdField);
+        inputPanel.add(new JLabel("Approved ID:"));
+        inputPanel.add(approvedIdField);
+        inputPanel.add(new JLabel("Approved Date (yyyy-mm-dd):"));
+        inputPanel.add(approvedDateField);
+        inputPanel.add(new JLabel("Borrowed Date (yyyy-mm-dd):"));
         inputPanel.add(borrowedDateField);
-        inputPanel.add(new JLabel("ReturnedDate (yyyy-mm-dd):"));
+        inputPanel.add(new JLabel("Returned Date (yyyy-mm-dd):"));
         inputPanel.add(returnedDateField);
+        inputPanel.add(new JLabel("Status:"));
+        inputPanel.add(statusField);
         inputPanel.add(new JLabel("Fee:"));
         inputPanel.add(feeField);
+        inputPanel.add(new JLabel("Remarks:"));
+        inputPanel.add(remarksField);
 
         int option = JOptionPane.showConfirmDialog(this, inputPanel, "Add Borrow Record", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
@@ -312,31 +328,38 @@ public class Borrowed extends JFrame {
                 }
 
                 try (Connection conn = DBConnection.getConnection()) {
-                    String sql = "INSERT INTO borroweds (bookId, userId, borrowedDate, returnedDate, fee) VALUES (?, ?, ?, ?, ?)";
+                    String sql = "INSERT INTO borroweds (bookId, userId, approvedId, approvedDate, borrowedDate, returnedDate, status, fee, remarks, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
                     PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-                    String selectedBook = bookComboBox.getSelectedItem().toString().split(" - ")[0];
-                    String selectedUser = userComboBox.getSelectedItem().toString().split(" - ")[0];
-                    String selectedBookName = bookComboBox.getSelectedItem().toString().split(" - ", 2)[1];
-                    String selectedUserName = userComboBox.getSelectedItem().toString().split(" - ", 2)[1];
+                    stmt.setString(1, bookIdField.getText().trim());
+                    stmt.setString(2, userIdField.getText().trim());
+                    stmt.setString(3, approvedIdField.getText().trim());
+                    stmt.setString(4, approvedDateField.getText().trim());
+                    stmt.setString(5, borrowedDateField.getText().trim());
+                    stmt.setString(6, returnedDateField.getText().trim());
+                    stmt.setString(7, statusField.getText().trim());
+                    stmt.setString(8, feeField.getText().trim());
+                    stmt.setString(9, remarksField.getText().trim());
 
-                    stmt.setString(1, selectedBook);
-                    stmt.setString(2, selectedUser);
-                    stmt.setString(3, borrowedDateField.getText());
-                    stmt.setString(4, returnedDateField.getText());
-                    stmt.setString(5, feeField.getText());
                     stmt.executeUpdate();
 
                     ResultSet rs = stmt.getGeneratedKeys();
                     if (rs.next()) {
-                        Object[] row = new Object[7];
-                        row[0] = rs.getInt(1);
-                        row[1] = selectedBookName;
-                        row[2] = selectedUserName;
-                        row[3] = borrowedDateField.getText();
-                        row[4] = returnedDateField.getText();
-                        row[5] = feeField.getText();
-                        row[6] = "Actions";
+                        int newId = rs.getInt(1);
+                        Object[] row = new Object[13];
+                        row[0] = newId;
+                        row[1] = bookIdField.getText().trim();
+                        row[2] = userIdField.getText().trim();
+                        row[3] = approvedIdField.getText().trim();
+                        row[4] = approvedDateField.getText().trim();
+                        row[5] = borrowedDateField.getText().trim();
+                        row[6] = returnedDateField.getText().trim();
+                        row[7] = statusField.getText().trim();
+                        row[8] = feeField.getText().trim();
+                        row[9] = remarksField.getText().trim();
+                        row[10] = java.time.LocalDateTime.now().toString();
+                        row[11] = java.time.LocalDateTime.now().toString();
+                        row[12] = "Actions";
                         model.addRow(row);
                     }
                 }
@@ -345,112 +368,59 @@ public class Borrowed extends JFrame {
                 JOptionPane.showMessageDialog(this, "Please enter dates in the correct format (yyyy-mm-dd).", "Invalid Date Format", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error adding record: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
-    }
-
-
-    private String[] getUsers() {
-        List<String> users = new ArrayList<>();
-        try (Connection conn = DBConnection.getConnection()) {
-            String sql = "SELECT id, name FROM users";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                users.add(id + " - " + name);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return users.toArray(new String[0]);
-    }
-
-    private String[] getBooks() {
-        List<String> books = new ArrayList<>();
-        try (Connection conn = DBConnection.getConnection()) {
-            String sql = "SELECT id, title FROM books";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                String id = rs.getString("id");
-                String title = rs.getString("title");
-                books.add(id + " - " + title);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return books.toArray(new String[0]);
-    }
-
-    // Helper for only active books
-    private String[] getActiveBooks() {
-        List<String> books = new ArrayList<>();
-        try (Connection conn = DBConnection.getConnection()) {
-            String sql = "SELECT id, title FROM books WHERE isActive = '1'";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                String id = rs.getString("id");
-                String title = rs.getString("title");
-                books.add(id + " - " + title);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return books.toArray(new String[0]);
     }
 
     private void openEditDialog(int row) {
-        JTextField borrowIdField = new JTextField(model.getValueAt(row, 0).toString());
-        borrowIdField.setEditable(false);
+        JTextField idField = new JTextField(model.getValueAt(row, 0).toString());
+        idField.setEditable(false);
 
-        JComboBox<String> bookCombo = new JComboBox<>(getBooks());
-        JComboBox<String> userCombo = new JComboBox<>(getUsers());
+        JTextField bookIdField = new JTextField(model.getValueAt(row, 1).toString());
+        JTextField userIdField = new JTextField(model.getValueAt(row, 2).toString());
+        JTextField approvedIdField = new JTextField(model.getValueAt(row, 3).toString());
+        JTextField approvedDateField = new JTextField(model.getValueAt(row, 4).toString());
+        JTextField borrowedDateField = new JTextField(model.getValueAt(row, 5).toString());
+        JTextField returnedDateField = new JTextField(model.getValueAt(row, 6).toString());
+        JTextField statusField = new JTextField(model.getValueAt(row, 7).toString());
+        JTextField feeField = new JTextField(model.getValueAt(row, 8).toString());
+        JTextField remarksField = new JTextField(model.getValueAt(row, 9).toString());
 
-        // Set selected item by matching displayed value
-        String currentBook = model.getValueAt(row, 1).toString();
-        String currentUser = model.getValueAt(row, 2).toString();
-        for (int i = 0; i < bookCombo.getItemCount(); i++) {
-            String val = bookCombo.getItemAt(i);
-            if (val.split(" - ", 2)[1].equals(currentBook)) {
-                bookCombo.setSelectedIndex(i);
-                break;
-            }
-        }
-        for (int i = 0; i < userCombo.getItemCount(); i++) {
-            String val = userCombo.getItemAt(i);
-            if (val.split(" - ", 2)[1].equals(currentUser)) {
-                userCombo.setSelectedIndex(i);
-                break;
-            }
-        }
+        approvedDateField.setToolTipText("Format: yyyy-mm-dd");
+        borrowedDateField.setToolTipText("Format: yyyy-mm-dd");
+        returnedDateField.setToolTipText("Format: yyyy-mm-dd");
 
-        JTextField borrowedDateField = new JTextField(model.getValueAt(row, 3).toString());
         borrowedDateField.setEditable(false); // Make borrowed date uneditable
 
-        JTextField returnedDateField = new JTextField(model.getValueAt(row, 4).toString());
-        JTextField feeField = new JTextField(model.getValueAt(row, 5).toString());
-
         JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-        inputPanel.add(new JLabel("Borrow ID:"));
-        inputPanel.add(borrowIdField);
-        inputPanel.add(new JLabel("Book:"));
-        inputPanel.add(bookCombo);
-        inputPanel.add(new JLabel("User:"));
-        inputPanel.add(userCombo);
-        inputPanel.add(new JLabel("Borrowed Date:"));
+        inputPanel.add(new JLabel("ID:"));
+        inputPanel.add(idField);
+        inputPanel.add(new JLabel("Book ID:"));
+        inputPanel.add(bookIdField);
+        inputPanel.add(new JLabel("User ID:"));
+        inputPanel.add(userIdField);
+        inputPanel.add(new JLabel("Approved ID:"));
+        inputPanel.add(approvedIdField);
+        inputPanel.add(new JLabel("Approved Date (yyyy-mm-dd):"));
+        inputPanel.add(approvedDateField);
+        inputPanel.add(new JLabel("Borrowed Date (yyyy-mm-dd):"));
         inputPanel.add(borrowedDateField);
         inputPanel.add(new JLabel("Returned Date (yyyy-mm-dd):"));
         inputPanel.add(returnedDateField);
+        inputPanel.add(new JLabel("Status:"));
+        inputPanel.add(statusField);
         inputPanel.add(new JLabel("Fee:"));
         inputPanel.add(feeField);
+        inputPanel.add(new JLabel("Remarks:"));
+        inputPanel.add(remarksField);
 
         int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Borrow Record", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                // Validate dates if non-empty
                 LocalDate borrowedDate = LocalDate.parse(borrowedDateField.getText(), formatter);
                 LocalDate returnedDate = LocalDate.parse(returnedDateField.getText(), formatter);
 
@@ -467,38 +437,44 @@ public class Borrowed extends JFrame {
                 }
 
                 try (Connection conn = DBConnection.getConnection()) {
-                    String sql = "UPDATE borroweds SET bookId=?, userId=?, borrowedDate=?, returnedDate=?, fee=? WHERE id=?";
+                    String sql = "UPDATE borroweds SET bookId = ?, userId = ?, approvedId = ?, approvedDate = ?, borrowedDate = ?, returnedDate = ?, status = ?, fee = ?, remarks = ?, updated_at = NOW() WHERE id = ?";
                     PreparedStatement stmt = conn.prepareStatement(sql);
 
-                    String selectedBook = (String) bookCombo.getSelectedItem();
-                    String selectedUser = (String) userCombo.getSelectedItem();
-                    String selectedBookName = selectedBook.split(" - ", 2)[1];
-                    String selectedUserName = selectedUser.split(" - ", 2)[1];
+                    stmt.setString(1, bookIdField.getText().trim());
+                    stmt.setString(2, userIdField.getText().trim());
+                    stmt.setString(3, approvedIdField.getText().trim());
+                    stmt.setString(4, approvedDateField.getText().trim());
+                    stmt.setString(5, borrowedDateField.getText().trim());
+                    stmt.setString(6, returnedDateField.getText().trim());
+                    stmt.setString(7, statusField.getText().trim());
+                    stmt.setString(8, feeField.getText().trim());
+                    stmt.setString(9, remarksField.getText().trim());
+                    stmt.setString(10, idField.getText().trim());
 
-                    stmt.setString(1, selectedBook.split(" - ")[0]);
-                    stmt.setString(2, selectedUser.split(" - ")[0]);
-                    stmt.setString(3, borrowedDateField.getText());
-                    stmt.setString(4, returnedDateField.getText());
-                    stmt.setString(5, feeField.getText());
-                    stmt.setString(6, borrowIdField.getText());
                     stmt.executeUpdate();
 
                     // Update model
-                    model.setValueAt(selectedBookName, row, 1);
-                    model.setValueAt(selectedUserName, row, 2);
-                    model.setValueAt(borrowedDateField.getText(), row, 3);
-                    model.setValueAt(returnedDateField.getText(), row, 4);
-                    model.setValueAt(feeField.getText(), row, 5);
+                    model.setValueAt(bookIdField.getText().trim(), row, 1);
+                    model.setValueAt(userIdField.getText().trim(), row, 2);
+                    model.setValueAt(approvedIdField.getText().trim(), row, 3);
+                    model.setValueAt(approvedDateField.getText().trim(), row, 4);
+                    model.setValueAt(borrowedDateField.getText().trim(), row, 5);
+                    model.setValueAt(returnedDateField.getText().trim(), row, 6);
+                    model.setValueAt(statusField.getText().trim(), row, 7);
+                    model.setValueAt(feeField.getText().trim(), row, 8);
+                    model.setValueAt(remarksField.getText().trim(), row, 9);
+                    model.setValueAt(model.getValueAt(row, 10), row, 10); // created_at unchanged
+                    model.setValueAt(java.time.LocalDateTime.now().toString(), row, 11); // updated_at set to now
                 }
 
             } catch (DateTimeParseException e) {
                 JOptionPane.showMessageDialog(this, "Please enter dates in the correct format (yyyy-mm-dd).", "Invalid Date Format", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
                 ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error updating record: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
-
 
     class ButtonRenderer extends JPanel implements TableCellRenderer {
         private final JButton editButton = new JButton("Edit");
@@ -555,6 +531,7 @@ public class Borrowed extends JFrame {
                         model.removeRow(currentRow);
                     } catch (Exception ex) {
                         ex.printStackTrace();
+                        JOptionPane.showMessageDialog(null, "Error deleting record: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             });
@@ -577,21 +554,10 @@ public class Borrowed extends JFrame {
 
         String sql = """
         SELECT 
-            b.id AS borrowId,
-            bo.id AS bookId, 
-            bo.title AS bookTitle, 
-            u.id AS userId, 
-            u.name AS userName, 
-            b.borrowedDate, 
-            b.returnedDate, 
-            b.fee
+            id, bookId, userId, approvedId, approvedDate, borrowedDate, returnedDate, status, fee, remarks, created_at, updated_at
         FROM 
-            borroweds b
-        JOIN 
-            books bo ON b.bookId = bo.id
-        JOIN 
-            users u ON b.userId = u.id
-    """;
+            borroweds
+        """;
 
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -599,18 +565,25 @@ public class Borrowed extends JFrame {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                row.add(rs.getInt("borrowId"));
-                row.add(rs.getString("bookTitle"));
-                row.add(rs.getString("userName"));
+                row.add(rs.getInt("id"));
+                row.add(rs.getString("bookId"));
+                row.add(rs.getString("userId"));
+                row.add(rs.getString("approvedId"));
+                row.add(rs.getString("approvedDate"));
                 row.add(rs.getString("borrowedDate"));
                 row.add(rs.getString("returnedDate"));
+                row.add(rs.getString("status"));
                 row.add(rs.getString("fee"));
+                row.add(rs.getString("remarks"));
+                row.add(rs.getString("created_at"));
+                row.add(rs.getString("updated_at"));
                 row.add("Actions");
                 model.addRow(row);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -618,3 +591,4 @@ public class Borrowed extends JFrame {
         SwingUtilities.invokeLater(() -> new Borrowed().setVisible(true));
     }
 }
+

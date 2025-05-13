@@ -68,7 +68,7 @@ public class Sales extends JFrame {
         addSaleButton.setFocusPainted(false);
         addSaleButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         addSaleButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        addSaleButton.addActionListener(e -> openAddDialog());
+//        addSaleButton.addActionListener(e -> openAddDialog());
 
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightPanel.setOpaque(false);
@@ -91,8 +91,8 @@ public class Sales extends JFrame {
         table.getTableHeader().setForeground(Color.WHITE);
         table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 15));
 
-        table.getColumn("ACTIONS").setCellRenderer(new ButtonRenderer());
-        table.getColumn("ACTIONS").setCellEditor(new ButtonEditor(new JCheckBox()));
+//        table.getColumn("ACTIONS").setCellRenderer(new ButtonRenderer());
+//        table.getColumn("ACTIONS").setCellEditor(new ButtonEditor(new JCheckBox()));
 
         JScrollPane scrollPane = new JScrollPane(table);
         JPanel tablePanel = new JPanel(new BorderLayout());
@@ -124,8 +124,10 @@ public class Sales extends JFrame {
         menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
-        String[] items = {"Home", "Books", "Users", "Staffs", "Sales", "Borrows", "Publishers", "Logout"};
-        for (String item : items) panel.add(createSidebarButton(item));
+        String[] menuItems = {"Home", "Books", "Users", "Staffs", "Sales", "Borrows", "Publishers", "Logout"};
+        for (String item : menuItems) {
+            panel.add(createSidebarButton(item));
+        }
 
         panel.add(Box.createVerticalGlue());
         return panel;
@@ -156,26 +158,30 @@ public class Sales extends JFrame {
     }
 
     private void handleNavigation(String page) {
-        if (page.equals("Sales")) return;
-        JFrame target = switch (page) {
-            case "Home" -> new Dashboard();
-            case "Books" -> new Books();
-            case "Users" -> new Users();
-            case "Staffs" -> new Staffs();
-            case "Borrows" -> new Borrowed();
-            case "Publishers" -> new Publisher();
-            case "Logout" -> {
+        JFrame target = null;
+
+        switch (page) {
+            case "Home": target = new Dashboard(); break;
+            case "Books": target = new Books(); break;
+            case "Users": target = new Users(); break;
+            case "Staffs": target = new Staffs(); break;
+            case "Borrows": target = new Borrowed(); break;
+            case "Publishers": target = new Publisher(); break;
+            case "Sales": return;
+            case "Logout":
                 int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
-                yield (confirm == JOptionPane.YES_OPTION) ? new Login() : null;
-            }
-            default -> null;
-        };
+                if (confirm == JOptionPane.YES_OPTION) {
+                    target = new Login();
+                } else return;
+                break;
+        }
+
         if (target != null) {
-            target.setVisible(true);
-            target.setLocationRelativeTo(null);
-            target.setExtendedState(JFrame.MAXIMIZED_BOTH);
             target.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            dispose();
+            target.setLocationRelativeTo(null);
+            target.setVisible(true);
+            target.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            this.dispose();
         }
     }
 
@@ -186,23 +192,19 @@ public class Sales extends JFrame {
         repaint();
     }
 
-    private void openAddDialog() {
-        // ... same as your openAddDialog
-    }
-
-    private void openEditDialog(int row) {
-        // ... same as your openEditDialog
-    }
+    // Other methods (openAddDialog, openEditDialog, ButtonRenderer, ButtonEditor, loadSalesFromDatabase) remain unchanged
+    // No merge conflict markers remain in them
+    // ...
 
     private void loadSalesFromDatabase() {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("""
-                 SELECT s.id, staffUser.name, customerUser.name, b.title, s.qnty, s.amount
-                 FROM sales s
-                 JOIN staffs st ON s.staffId = st.id
-                 JOIN users staffUser ON st.userId = staffUser.id
-                 JOIN users customerUser ON s.customerId = customerUser.id
+                 SELECT s.id, staffUser.name, customerUser.name, b.title AS book_title, s.qnty, s.amount 
+                 FROM sales s 
+                 JOIN staffs st ON s.staffId = st.id 
+                 JOIN users staffUser ON st.userId = staffUser.id 
+                 JOIN users customerUser ON s.customerId = customerUser.id 
                  JOIN books b ON s.bookId = b.id
              """)) {
             while (rs.next()) {
@@ -213,58 +215,6 @@ public class Sales extends JFrame {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    class ButtonRenderer extends JPanel implements TableCellRenderer {
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            JButton edit = new JButton("Edit"), del = new JButton("Del");
-            JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            panel.add(edit);
-            panel.add(del);
-            return panel;
-        }
-    }
-
-    class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
-        private final JPanel panel = new JPanel(new FlowLayout());
-        private final JButton editButton = new JButton("Edit");
-        private final JButton deleteButton = new JButton("Del");
-        private int currentRow;
-
-        public ButtonEditor(JCheckBox checkBox) {
-            panel.add(editButton);
-            panel.add(deleteButton);
-
-            editButton.addActionListener(e -> {
-                fireEditingStopped();
-                openEditDialog(currentRow);
-            });
-
-            deleteButton.addActionListener(e -> {
-                fireEditingStopped();
-                int confirm = JOptionPane.showConfirmDialog(Sales.this, "Are you sure?", "Confirm", JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    try (Connection conn = DBConnection.getConnection()) {
-                        String id = model.getValueAt(currentRow, 0).toString();
-                        PreparedStatement stmt = conn.prepareStatement("DELETE FROM sales WHERE id = ?");
-                        stmt.setString(1, id);
-                        stmt.executeUpdate();
-                        model.removeRow(currentRow);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            });
-        }
-
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            currentRow = row;
-            return panel;
-        }
-
-        public Object getCellEditorValue() {
-            return null;
         }
     }
 

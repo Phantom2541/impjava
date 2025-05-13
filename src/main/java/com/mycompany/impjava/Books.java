@@ -39,7 +39,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
-import java.awt.Color;
+
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -115,11 +115,12 @@ public class Books extends JFrame {
 
         contentArea.add(topBar, BorderLayout.NORTH);
 
-        String[] columnNames = {"ID", "TITLE", "AUTHOR", "PUBLISHER", "COPYRIGHT", "LCN", "SECTION", "ISACTIVE", "ACTIONS"};
+        // Removed CREATED_AT and UPDATED_AT columns
+        String[] columnNames = {"ID", "TITLE", "AUTHOR", "PUBLISHER", "COPYRIGHT", "ISBN", "GENRE", "QNTY", "AVAILABILITY", "ACTIONS"};
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model) {
             public boolean isCellEditable(int row, int column) {
-                return column == 8;
+                return column == 9; // Only the ACTIONS column editable (last index 9)
             }
         };
 
@@ -140,7 +141,7 @@ public class Books extends JFrame {
         contentArea.add(tablePanel, BorderLayout.CENTER);
         add(contentArea, BorderLayout.CENTER);
 
-        loadBooksFromDatabase(); // Load data from MySQL
+        loadBooksFromDatabase();
     }
 
     private JPanel createSidebar() {
@@ -165,7 +166,6 @@ public class Books extends JFrame {
         menuListLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panel.add(menuListLabel);
 
-        // Add Menu Items
         panel.add(createSidebarButton("Home"));
         panel.add(createSidebarButton("Books"));
         panel.add(createSidebarButton("Users"));
@@ -222,59 +222,59 @@ public class Books extends JFrame {
                 Dashboard dashboard = new Dashboard();
                 dashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 dashboard.setLocationRelativeTo(null);
-                dashboard.setVisible(true); 
+                dashboard.setVisible(true);
                 dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
                 break;
 
             case "Books":
-                //already on books side ewe
-            break;
+                // Already on Books
+                break;
 
             case "Users":
                 Users users = new Users();
                 users.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 users.setLocationRelativeTo(null);
-                users.setVisible(true); 
+                users.setVisible(true);
                 users.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-            break;
+                break;
 
             case "Staffs":
                 Staffs staffs = new Staffs();
                 staffs.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 staffs.setLocationRelativeTo(null);
-                staffs.setVisible(true); 
+                staffs.setVisible(true);
                 staffs.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-            break;
+                break;
 
             case "Sales":
                 Sales sales = new Sales();
                 sales.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 sales.setLocationRelativeTo(null);
-                sales.setVisible(true); 
+                sales.setVisible(true);
                 sales.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-            break;
+                break;
 
             case "Borrows":
-                Borrowed borrowed= new Borrowed();
+                Borrowed borrowed = new Borrowed();
                 borrowed.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 borrowed.setLocationRelativeTo(null);
-                borrowed.setVisible(true); 
+                borrowed.setVisible(true);
                 borrowed.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 this.dispose();
-            break;
+                break;
 
             case "Publishers":
-            Publisher publisher= new Publisher();
-            publisher.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            publisher.setLocationRelativeTo(null);
-            publisher.setVisible(true); 
-            publisher.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            this.dispose();
-            break;
+                Publisher publisher = new Publisher();
+                publisher.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                publisher.setLocationRelativeTo(null);
+                publisher.setVisible(true);
+                publisher.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                this.dispose();
+                break;
 
             case "Logout":
                 int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout", JOptionPane.YES_NO_OPTION);
@@ -300,9 +300,17 @@ public class Books extends JFrame {
         repaint();
     }
 
+    private String safeGetString(int row, int col) {
+        Object val = model.getValueAt(row, col);
+        return (val != null) ? val.toString() : "";
+    }
+
+    private String computeAvailability(int qnty) {
+        return (qnty <= 0) ? "Out of Stock" : "Available";
+    }
+
     private void openAddBookDialog(DefaultTableModel model) {
         try (Connection conn = DBConnection.getConnection()) {
-            // Load publishers into a map
             Map<String, String> publisherMap = new LinkedHashMap<>();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT id, name FROM publishers");
@@ -310,49 +318,49 @@ public class Books extends JFrame {
                 publisherMap.put(rs.getString("name"), rs.getString("id"));
             }
 
-            // UI Components
             JTextField titleField = new JTextField();
             JTextField authorField = new JTextField();
             JComboBox<String> publisherBox = new JComboBox<>(publisherMap.keySet().toArray(new String[0]));
             JTextField copyrightField = new JTextField();
-            JTextField lcnField = new JTextField();
-            JTextField sectionField = new JTextField();
+            JTextField isbnField = new JTextField();
+            JTextField genreField = new JTextField();
+            JTextField qntyField = new JTextField();
             JComboBox<String> isActiveBox = new JComboBox<>(new String[]{"true", "false"});
 
-            // Validation
-            copyrightField.addKeyListener(new KeyAdapter() {
+            KeyAdapter numericValidator = new KeyAdapter() {
                 public void keyReleased(KeyEvent e) {
-                    String text = copyrightField.getText();
-                    copyrightField.setBackground(text.matches("\\d*") ? Color.WHITE : Color.PINK);
+                    JTextField src = (JTextField) e.getSource();
+                    src.setBackground(src.getText().matches("\\d*") ? Color.WHITE : Color.PINK);
                 }
-            });
+            };
+            copyrightField.addKeyListener(numericValidator);
+            qntyField.addKeyListener(numericValidator);
 
-            // Layout
             JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
             inputPanel.add(new JLabel("Title:")); inputPanel.add(titleField);
             inputPanel.add(new JLabel("Author:")); inputPanel.add(authorField);
             inputPanel.add(new JLabel("Publisher:")); inputPanel.add(publisherBox);
             inputPanel.add(new JLabel("Copyright Year:")); inputPanel.add(copyrightField);
-            inputPanel.add(new JLabel("Library of Congress Number:")); inputPanel.add(lcnField);
-            inputPanel.add(new JLabel("Section:")); inputPanel.add(sectionField);
+            inputPanel.add(new JLabel("ISBN:")); inputPanel.add(isbnField);
+            inputPanel.add(new JLabel("Genre:")); inputPanel.add(genreField);
+            inputPanel.add(new JLabel("Quantity:")); inputPanel.add(qntyField);
             inputPanel.add(new JLabel("Is Active:")); inputPanel.add(isActiveBox);
 
             while (true) {
                 int option = JOptionPane.showConfirmDialog(null, inputPanel, "Add Book", JOptionPane.OK_CANCEL_OPTION);
                 if (option != JOptionPane.OK_OPTION) return;
 
-                // Get input values
                 String title = titleField.getText().trim();
                 String author = authorField.getText().trim();
                 String copyright = copyrightField.getText().trim();
-                String lcn = lcnField.getText().trim();
-                String section = sectionField.getText().trim();
+                String isbn = isbnField.getText().trim();
+                String genre = genreField.getText().trim();
+                String qnty = qntyField.getText().trim();
                 String publisherId = publisherMap.get((String) publisherBox.getSelectedItem());
                 String isActive = isActiveBox.getSelectedItem().equals("true") ? "1" : "0";
 
-                // Validate inputs
                 if (title.isEmpty() || author.isEmpty() || copyright.isEmpty() ||
-                        lcn.isEmpty() || section.isEmpty()) {
+                        isbn.isEmpty() || genre.isEmpty() || qnty.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "All fields must be filled.");
                     continue;
                 }
@@ -362,22 +370,29 @@ public class Books extends JFrame {
                     continue;
                 }
 
-                // Insert into DB
-                String sql = "INSERT INTO books (title, author, publisherId, copyright, lcn, section, isActive) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                if (!qnty.matches("\\d+")) {
+                    JOptionPane.showMessageDialog(null, "Quantity must be numeric.");
+                    continue;
+                }
+
+                String sql = "INSERT INTO books (title, author, publisherId, copyright, isbn, genre, qnty, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement stmtInsert = conn.prepareStatement(sql);
                 stmtInsert.setString(1, title);
                 stmtInsert.setString(2, author);
                 stmtInsert.setString(3, publisherId);
                 stmtInsert.setString(4, copyright);
-                stmtInsert.setString(5, lcn);
-                stmtInsert.setString(6, section);
-                stmtInsert.setString(7, isActive);
+                stmtInsert.setString(5, isbn);
+                stmtInsert.setString(6, genre);
+                stmtInsert.setInt(7, Integer.parseInt(qnty));
+                stmtInsert.setString(8, isActive);
                 stmtInsert.executeUpdate();
 
-                // Add to table model
+                int qntyVal = Integer.parseInt(qnty);
+                String availability = computeAvailability(qntyVal);
+
                 model.addRow(new Object[]{
                         "", title, author, publisherBox.getSelectedItem(), copyright,
-                        lcn, section, isActiveBox.getSelectedItem(), "Actions"
+                        isbn, genre, qnty, availability, "Actions"
                 });
 
                 break;
@@ -390,7 +405,6 @@ public class Books extends JFrame {
 
     private void openEditDialog(int row) {
         try (Connection conn = DBConnection.getConnection()) {
-            // Load publishers
             Map<String, String> publisherMap = new LinkedHashMap<>();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT id, name FROM publishers");
@@ -398,23 +412,41 @@ public class Books extends JFrame {
                 publisherMap.put(rs.getString("name"), rs.getString("id"));
             }
 
-            // UI Components
-            JTextField idField = new JTextField(model.getValueAt(row, 0).toString());
+            String id = safeGetString(row, 0);
+            String title = safeGetString(row, 1);
+            String author = safeGetString(row, 2);
+            String publisherName = safeGetString(row, 3);
+            String copyright = safeGetString(row, 4);
+            String isbn = safeGetString(row, 5);
+            String genre = safeGetString(row, 6);
+            String qntyStr = safeGetString(row, 7);
+
+            JTextField idField = new JTextField(id);
             idField.setEditable(false);
-            JTextField titleField = new JTextField(model.getValueAt(row, 1).toString());
-            JTextField authorField = new JTextField(model.getValueAt(row, 2).toString());
+            JTextField titleField = new JTextField(title);
+            JTextField authorField = new JTextField(author);
             JComboBox<String> publisherBox = new JComboBox<>(publisherMap.keySet().toArray(new String[0]));
-            JTextField copyrightField = new JTextField(model.getValueAt(row, 4).toString());
-            JTextField lcnField = new JTextField(model.getValueAt(row, 5).toString());
-            JTextField sectionField = new JTextField(model.getValueAt(row, 6).toString());
-            JComboBox<String> isActiveBox = new JComboBox<>(new String[] { "true", "false" });
-            isActiveBox.setSelectedItem(model.getValueAt(row, 7).toString());
+            publisherBox.setSelectedItem(publisherName);
+            JTextField copyrightField = new JTextField(copyright);
+            JTextField isbnField = new JTextField(isbn);
+            JTextField genreField = new JTextField(genre);
+            JTextField qntyField = new JTextField(qntyStr);
+            JComboBox<String> isActiveBox = new JComboBox<>(new String[]{"true", "false"});
 
-            // Set current publisher
-            String currentPublisherName = model.getValueAt(row, 3).toString();
-            publisherBox.setSelectedItem(currentPublisherName);
+            // Query isActive from DB for this record ID
+            String isActiveValue = "0";
+            try (PreparedStatement ps = conn.prepareStatement("SELECT isActive FROM books WHERE id = ?")) {
+                ps.setString(1, id);
+                try (ResultSet rs2 = ps.executeQuery()) {
+                    if (rs2.next()) {
+                        isActiveValue = rs2.getString(1);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            isActiveBox.setSelectedItem(isActiveValue.equals("1") ? "true" : "false");
 
-            // Validation for numeric fields
             KeyAdapter numericValidator = new KeyAdapter() {
                 public void keyReleased(KeyEvent e) {
                     JTextField src = (JTextField) e.getSource();
@@ -422,26 +454,27 @@ public class Books extends JFrame {
                 }
             };
             copyrightField.addKeyListener(numericValidator);
-            lcnField.addKeyListener(numericValidator);
+            qntyField.addKeyListener(numericValidator);
 
-            // Build panel
             JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
             inputPanel.add(new JLabel("ID:")); inputPanel.add(idField);
             inputPanel.add(new JLabel("Title:")); inputPanel.add(titleField);
             inputPanel.add(new JLabel("Author:")); inputPanel.add(authorField);
             inputPanel.add(new JLabel("Publisher:")); inputPanel.add(publisherBox);
             inputPanel.add(new JLabel("Copyright:")); inputPanel.add(copyrightField);
-            inputPanel.add(new JLabel("LCN:")); inputPanel.add(lcnField);
-            inputPanel.add(new JLabel("Section:")); inputPanel.add(sectionField);
+            inputPanel.add(new JLabel("ISBN:")); inputPanel.add(isbnField);
+            inputPanel.add(new JLabel("Genre:")); inputPanel.add(genreField);
+            inputPanel.add(new JLabel("Quantity:")); inputPanel.add(qntyField);
             inputPanel.add(new JLabel("Is Active:")); inputPanel.add(isActiveBox);
 
             int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Book", JOptionPane.OK_CANCEL_OPTION);
             if (option != JOptionPane.OK_OPTION) return;
 
-            // Validate inputs
             if (titleField.getText().trim().isEmpty() || authorField.getText().trim().isEmpty()
-                    || copyrightField.getText().trim().isEmpty() || lcnField.getText().trim().isEmpty()
-                    || sectionField.getText().trim().isEmpty()) {
+                    || copyrightField.getText().trim().isEmpty()
+                    || isbnField.getText().trim().isEmpty()
+                    || genreField.getText().trim().isEmpty()
+                    || qntyField.getText().trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "All fields must be filled.");
                 return;
             }
@@ -451,28 +484,36 @@ public class Books extends JFrame {
                 return;
             }
 
-            // Update DB
-            String sql = "UPDATE books SET title=?, author=?, publisherId=?, copyright=?, lcn=?, section=?, isActive=? WHERE id=?";
+            if (!qntyField.getText().trim().matches("\\d+")) {
+                JOptionPane.showMessageDialog(this, "Quantity must be numeric.");
+                return;
+            }
+
+            String sql = "UPDATE books SET title=?, author=?, publisherId=?, copyright=?, isbn=?, genre=?, qnty=?, isActive=? WHERE id=?";
             PreparedStatement stmtUpdate = conn.prepareStatement(sql);
             stmtUpdate.setString(1, titleField.getText().trim());
             stmtUpdate.setString(2, authorField.getText().trim());
             stmtUpdate.setString(3, publisherMap.get(publisherBox.getSelectedItem()));
             stmtUpdate.setString(4, copyrightField.getText().trim());
-            stmtUpdate.setString(5, lcnField.getText().trim());
-            stmtUpdate.setString(6, sectionField.getText().trim());
-            stmtUpdate.setString(7, isActiveBox.getSelectedItem().equals("true") ? "1" : "0");
-            stmtUpdate.setString(8, idField.getText().trim());
+            stmtUpdate.setString(5, isbnField.getText().trim());
+            stmtUpdate.setString(6, genreField.getText().trim());
+            stmtUpdate.setInt(7, Integer.parseInt(qntyField.getText().trim()));
+            stmtUpdate.setString(8, isActiveBox.getSelectedItem().equals("true") ? "1" : "0");
+            stmtUpdate.setString(9, idField.getText().trim());
             stmtUpdate.executeUpdate();
 
-            // Update table model
+            int qnty = Integer.parseInt(qntyField.getText().trim());
+            String availability = computeAvailability(qnty);
+
             model.setValueAt(idField.getText(), row, 0);
             model.setValueAt(titleField.getText(), row, 1);
             model.setValueAt(authorField.getText(), row, 2);
             model.setValueAt(publisherBox.getSelectedItem(), row, 3);
             model.setValueAt(copyrightField.getText(), row, 4);
-            model.setValueAt(lcnField.getText(), row, 5);
-            model.setValueAt(sectionField.getText(), row, 6);
-            model.setValueAt(isActiveBox.getSelectedItem(), row, 7);
+            model.setValueAt(isbnField.getText(), row, 5);
+            model.setValueAt(genreField.getText(), row, 6);
+            model.setValueAt(qntyField.getText(), row, 7);
+            model.setValueAt(availability, row, 8);
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error while editing book: " + ex.getMessage());
@@ -524,7 +565,7 @@ public class Books extends JFrame {
                 int confirm = JOptionPane.showConfirmDialog(Books.this, "Are you sure to delete this book?", "Confirm", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     try (Connection conn = DBConnection.getConnection()) {
-                        String id = model.getValueAt(currentRow, 0).toString();
+                        String id = safeGetString(currentRow, 0);
                         PreparedStatement stmt = conn.prepareStatement("DELETE FROM books WHERE id = ?");
                         stmt.setString(1, id);
                         stmt.executeUpdate();
@@ -549,19 +590,33 @@ public class Books extends JFrame {
     private void loadBooksFromDatabase() {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             // Join the 'books' table with the 'publishers' table to get the publisher's name
-             ResultSet rs = stmt.executeQuery("SELECT b.id, b.title, b.author, p.name, b.copyright, b.lcn, b.section, b.isActive FROM books b JOIN publishers p ON b.publisherId = p.id")) {
+             // Removed created_at, updated_at from query
+             ResultSet rs = stmt.executeQuery("SELECT b.id, b.title, b.author, p.name, b.copyright, b.isbn, b.genre, b.qnty, b.isActive FROM books b JOIN publishers p ON b.publisherId = p.id")) {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                for (int i = 1; i <= 7; i++) {
-                    row.add(rs.getString(i));  // Add columns from 'books' table
-                }
+                int id = rs.getInt(1);
+                String title = rs.getString(2);
+                String author = rs.getString(3);
+                String publisherName = rs.getString(4);
+                String copyright = rs.getString(5);
+                String isbn = rs.getString(6);
+                String genre = rs.getString(7);
+                int qnty = rs.getInt(8);
+                // We no longer use isActive for availability, just qnty
+                String availability = computeAvailability(qnty);
 
-                // Hardcode the 'isActive' value as true
-                row.add(true);  // Always add true for isActive column
+                row.add(String.valueOf(id));
+                row.add(title);
+                row.add(author);
+                row.add(publisherName);
+                row.add(copyright);
+                row.add(isbn);
+                row.add(genre);
+                row.add(String.valueOf(qnty));
+                row.add(availability);
+                row.add("Actions");
 
-                row.add("Actions");  // Add Actions column
                 model.addRow(row);
             }
         } catch (Exception e) {
