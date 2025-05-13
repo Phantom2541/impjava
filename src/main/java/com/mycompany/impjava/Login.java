@@ -186,7 +186,7 @@ public class Login extends javax.swing.JFrame {
         String email = jTextField1.getText();
         String password = String.valueOf(jPasswordField1.getPassword());
 
-        String sql = "SELECT password FROM users WHERE email = ?";
+        String sql = "SELECT password, role FROM users WHERE email = ?";
         try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
@@ -195,12 +195,23 @@ public class Login extends javax.swing.JFrame {
 
             if (rs.next()) {
                 String dbPassword = rs.getString("password");
+                String role = rs.getString("role");
+
                 if (password.equals(dbPassword)) {
                     JOptionPane.showMessageDialog(this, "✅ Login Successful! Welcome, " + email);
-                    Dashboard dashboard = new Dashboard();
-                    dashboard.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-                    dashboard.setVisible(true);
-                    dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+                    if ("librarian".equalsIgnoreCase(role)) {
+                        Dashboard dashboard = new Dashboard();
+                        dashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                        dashboard.setVisible(true);
+                        dashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    } else {
+                        stuSearchBook studentDashboard = new stuSearchBook();
+                        studentDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                        studentDashboard.setVisible(true);
+                        studentDashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    }
+
                     this.dispose();
                 } else {
                     JOptionPane.showMessageDialog(this, "Incorrect password!", "Login Failed", JOptionPane.ERROR_MESSAGE);
