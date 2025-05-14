@@ -99,8 +99,7 @@ public class Borrowed extends JFrame {
         contentArea.add(topBar, BorderLayout.NORTH);
 
         String[] columnNames = {
-                "ID", "Book ID", "User ID", "Approved ID", "Approved Date",
-                "Borrowed Date", "Returned Date", "Status", "Fee", "Remarks", "Created At", "Updated At", "ACTIONS"
+                "ID", "Book", "Student", "Borrowed Date", "Status", "ACTIONS"
         };
         model = new DefaultTableModel(columnNames, 0);
         table = new JTable(model) {
@@ -396,24 +395,14 @@ public class Borrowed extends JFrame {
         JPanel inputPanel = new JPanel(new GridLayout(0, 1, 5, 5));
         inputPanel.add(new JLabel("ID:"));
         inputPanel.add(idField);
-        inputPanel.add(new JLabel("Book ID:"));
+        inputPanel.add(new JLabel("Book:"));
         inputPanel.add(bookIdField);
-        inputPanel.add(new JLabel("User ID:"));
+        inputPanel.add(new JLabel("User:"));
         inputPanel.add(userIdField);
-        inputPanel.add(new JLabel("Approved ID:"));
-        inputPanel.add(approvedIdField);
-        inputPanel.add(new JLabel("Approved Date (yyyy-mm-dd):"));
-        inputPanel.add(approvedDateField);
         inputPanel.add(new JLabel("Borrowed Date (yyyy-mm-dd):"));
         inputPanel.add(borrowedDateField);
-        inputPanel.add(new JLabel("Returned Date (yyyy-mm-dd):"));
-        inputPanel.add(returnedDateField);
         inputPanel.add(new JLabel("Status:"));
         inputPanel.add(statusField);
-        inputPanel.add(new JLabel("Fee:"));
-        inputPanel.add(feeField);
-        inputPanel.add(new JLabel("Remarks:"));
-        inputPanel.add(remarksField);
 
         int option = JOptionPane.showConfirmDialog(this, inputPanel, "Edit Borrow Record", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
@@ -550,40 +539,23 @@ public class Borrowed extends JFrame {
     }
 
     private void loadBorrowedsFromDatabase() {
-        model.setRowCount(0);
-
-        String sql = """
-        SELECT 
-            id, bookId, userId, approvedId, approvedDate, borrowedDate, returnedDate, status, fee, remarks, created_at, updated_at
-        FROM 
-            borroweds
-        """;
-
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
+             ResultSet rs = stmt.executeQuery("""
+                 SELECT b.id, l.title, u.name, b.borrowedDate, b.status
+                FROM borroweds b
+                JOIN books l ON b.bookId = l.id
+                JOIN users u ON b.userId = u.id
+                WHERE status = "pending";
+             """)) {
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                row.add(rs.getInt("id"));
-                row.add(rs.getString("bookId"));
-                row.add(rs.getString("userId"));
-                row.add(rs.getString("approvedId"));
-                row.add(rs.getString("approvedDate"));
-                row.add(rs.getString("borrowedDate"));
-                row.add(rs.getString("returnedDate"));
-                row.add(rs.getString("status"));
-                row.add(rs.getString("fee"));
-                row.add(rs.getString("remarks"));
-                row.add(rs.getString("created_at"));
-                row.add(rs.getString("updated_at"));
+                for (int i = 1; i <= 5; i++) row.add(rs.getString(i));
                 row.add("Actions");
                 model.addRow(row);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
