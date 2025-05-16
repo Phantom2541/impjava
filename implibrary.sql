@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2025 at 06:56 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Generation Time: May 16, 2025 at 05:27 AM
+-- Server version: 10.4.24-MariaDB
+-- PHP Version: 8.0.19
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -29,12 +29,12 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `books` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `author` varchar(255) NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `author` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `publisherId` bigint(20) UNSIGNED NOT NULL,
   `copyright` int(11) NOT NULL,
-  `isbn` varchar(255) NOT NULL,
-  `genre` varchar(255) NOT NULL,
+  `isbn` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `genre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `qnty` int(11) NOT NULL,
   `isActive` tinyint(1) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -65,16 +65,34 @@ CREATE TABLE `borroweds` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `bookId` bigint(20) UNSIGNED NOT NULL,
   `userId` bigint(20) UNSIGNED NOT NULL,
-  `approvedId` bigint(20) UNSIGNED NOT NULL,
-  `approvedDate` date NOT NULL,
-  `borrowedDate` date NOT NULL,
-  `returnedDate` date NOT NULL,
-  `status` enum('pending','approved','denied','returned') NOT NULL DEFAULT 'pending',
-  `fee` int(11) NOT NULL,
-  `remarks` varchar(255) DEFAULT NULL,
+  `approvedId` bigint(20) UNSIGNED DEFAULT NULL,
+  `approvedDate` date DEFAULT NULL,
+  `borrowedDate` date DEFAULT NULL,
+  `returnedDate` date DEFAULT NULL,
+  `status` enum('pending','approved','denied','returned') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `fee` int(11) DEFAULT NULL,
+  `remarks` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `borroweds`
+--
+
+INSERT INTO `borroweds` (`id`, `bookId`, `userId`, `approvedId`, `approvedDate`, `borrowedDate`, `returnedDate`, `status`, `fee`, `remarks`, `created_at`, `updated_at`) VALUES
+(1, 15, 2, 1, '2025-04-01', '2025-04-02', '2025-04-09', 'returned', 0, 'Returned on time', '2025-05-13 04:10:42', '2025-05-13 04:10:42'),
+(2, 16, 2, 1, '2025-04-20', '2025-04-21', '0000-00-00', 'approved', 0, 'Due next week', '2025-05-13 04:10:42', '2025-05-13 04:10:42'),
+(3, 15, 2, 1, '2025-04-01', '2025-04-02', '2025-04-09', 'returned', 0, 'Returned on time', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(4, 16, 2, 1, '2025-04-20', '2025-04-21', NULL, 'approved', 0, 'Due next week', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(5, 17, 2, NULL, NULL, NULL, NULL, 'pending', NULL, 'Awaiting approval', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(6, 18, 2, 1, '2025-04-18', NULL, NULL, 'denied', NULL, 'Exceeded borrow limit', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(7, 19, 2, 1, '2025-03-01', '2025-03-02', '2025-03-20', 'returned', 30, 'Returned 5 days late', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(8, 20, 2, 1, '2025-02-10', '2025-02-11', '2025-02-18', 'returned', 0, 'On-time return', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(9, 21, 2, 1, '2025-05-10', '2025-05-11', NULL, 'approved', 0, 'Still reading', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(10, 22, 2, NULL, NULL, NULL, NULL, 'pending', NULL, 'Pending librarian review', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(11, 18, 2, 1, '2025-01-05', '2025-01-06', '2025-02-06', 'returned', 100, 'Returned 3 weeks late', '2025-05-13 04:11:34', '2025-05-13 04:11:34'),
+(12, 16, 2, 1, '2025-05-01', NULL, NULL, 'denied', NULL, 'User has unpaid fees', '2025-05-13 04:11:34', '2025-05-13 04:11:34');
 
 -- --------------------------------------------------------
 
@@ -84,11 +102,11 @@ CREATE TABLE `borroweds` (
 
 CREATE TABLE `failed_jobs` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `uuid` varchar(255) NOT NULL,
-  `connection` text NOT NULL,
-  `queue` text NOT NULL,
-  `payload` longtext NOT NULL,
-  `exception` longtext NOT NULL,
+  `uuid` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `connection` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `queue` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `exception` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
   `failed_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -100,7 +118,7 @@ CREATE TABLE `failed_jobs` (
 
 CREATE TABLE `migrations` (
   `id` int(10) UNSIGNED NOT NULL,
-  `migration` varchar(255) NOT NULL,
+  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -126,8 +144,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 --
 
 CREATE TABLE `password_resets` (
-  `email` varchar(255) NOT NULL,
-  `token` varchar(255) NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -139,11 +157,11 @@ CREATE TABLE `password_resets` (
 
 CREATE TABLE `personal_access_tokens` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `tokenable_id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `token` varchar(64) NOT NULL,
-  `abilities` text DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `abilities` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `last_used_at` timestamp NULL DEFAULT NULL,
   `expires_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -158,9 +176,9 @@ CREATE TABLE `personal_access_tokens` (
 
 CREATE TABLE `publishers` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `subName` varchar(255) NOT NULL,
-  `Address` varchar(255) NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subName` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `Address` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -205,7 +223,7 @@ CREATE TABLE `sales` (
 CREATE TABLE `staffs` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `userId` bigint(20) UNSIGNED NOT NULL,
-  `position` varchar(255) NOT NULL,
+  `position` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -218,16 +236,42 @@ CREATE TABLE `staffs` (
 
 CREATE TABLE `users` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `role` varchar(255) NOT NULL DEFAULT 'user',
-  `email` varchar(255) NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'user',
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `dob` date NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
-  `password` varchar(255) NOT NULL,
-  `remember_token` varchar(100) DEFAULT NULL,
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `role`, `email`, `dob`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
+(1, 'QuinnTimber', 'librarian', 'quinntimber@gmail.com', '2005-12-24', NULL, 'password', NULL, NULL, NULL),
+(2, 'Alice Santos', 'student', 'alice@example.com', '2000-03-15', NULL, 'password', NULL, NULL, NULL),
+(3, 'Ben Cruz', 'staff', 'ben@example.com', '1995-08-21', NULL, 'pass123', NULL, NULL, NULL),
+(4, 'Clara Gomez', 'customer', 'clara@example.com', '2002-11-10', NULL, 'pass123', NULL, NULL, NULL),
+(5, 'David Lee', 'staff', 'david@example.com', '1990-04-30', NULL, 'pass123', NULL, NULL, NULL),
+(6, 'Ella Reyes', 'customer', 'ella@example.com', '2001-12-20', NULL, 'pass123', NULL, NULL, NULL),
+(7, 'Fred Navarro', 'customer', 'fred@example.com', '1999-07-14', NULL, 'pass123', NULL, NULL, NULL),
+(8, 'Grace Lim', 'staff', 'grace@example.com', '1988-09-05', NULL, 'pass123', NULL, NULL, NULL),
+(9, 'Hannah Sy', 'customer', 'hannah@example.com', '2003-06-22', NULL, 'pass123', NULL, NULL, NULL),
+(10, 'Ian dela Cruz', 'staff', 'ian@example.com', '1992-01-19', NULL, 'pass123', NULL, NULL, NULL),
+(11, 'Julia Tan', 'customer', 'julia@example.com', '2000-08-09', NULL, 'pass123', NULL, NULL, NULL),
+(12, 'Kyle Torres', 'customer', 'kyle@example.com', '1998-03-11', NULL, 'pass123', NULL, NULL, NULL),
+(13, 'Lara Cruz', 'staff', 'lara@example.com', '1997-10-13', NULL, 'pass123', NULL, NULL, NULL),
+(14, 'Marco Javier', 'customer', 'marco@example.com', '2004-02-27', NULL, 'pass123', NULL, NULL, NULL),
+(15, 'Nina Pascual', 'staff', 'nina@example.com', '1985-05-17', NULL, 'pass123', NULL, NULL, NULL),
+(16, 'Oscar Santos', 'customer', 'oscar@example.com', '2000-07-25', NULL, 'pass123', NULL, NULL, NULL),
+(17, 'thom', 'user', 'thom@gmail.com', '2005-12-24', NULL, 'password', NULL, NULL, NULL),
+(18, 'quinn', 'user', 'quinn@gmail.com', '1900-01-01', NULL, 'password', NULL, NULL, NULL),
+(19, 'asdsddasd', 'user', 'uytr', '2000-12-12', NULL, 'Passw0rd', NULL, NULL, NULL),
+(20, 'ginger123', 'user', 'ginger@gmail.com', '2009-01-01', NULL, 'Passw0rd', NULL, NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -319,7 +363,7 @@ ALTER TABLE `books`
 -- AUTO_INCREMENT for table `borroweds`
 --
 ALTER TABLE `borroweds`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -361,7 +405,7 @@ ALTER TABLE `staffs`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- Constraints for dumped tables
